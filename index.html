@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image prompt generator v1.0.14</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%2307111f%27/%3E%3Cpath d=%27M16 22h32v6H35v22h-6V28H16z%27 fill=%27%2338bdf8%27/%3E%3Cpath d=%27M46 16l2.5 5.5L54 24l-5.5 2.5L46 32l-2.5-5.5L38 24l5.5-2.5z%27 fill=%27%23818cf8%27/%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          boxShadow: {
+            glow: '0 18px 60px rgba(2, 132, 199, 0.22)',
+            panel: '0 22px 70px rgba(2, 6, 23, 0.28)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg-1: #07111f;
+      --bg-2: #0b1730;
+      --panel: rgba(11, 23, 39, 0.92);
+      --panel-soft: rgba(15, 23, 42, 0.84);
+      --border: rgba(148, 163, 184, 0.16);
+      --text: #e6eef9;
+      --muted: #90a4c4;
+      --primary: #38bdf8;
+      --secondary: #818cf8;
+      --success: #2dd4bf;
+      --danger: #fb7185;
+      --warning: #fbbf24;
+    }
+
+    html { background: var(--bg-1); }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.12), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, 0.14), transparent 28%),
+        linear-gradient(180deg, #07111f 0%, #081321 52%, #06101d 100%);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(148,163,184,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148,163,184,.04) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 92%);
+    }
+    .glass {
+      background: rgba(8, 18, 33, 0.92);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(2, 6, 23, 0.28);
+      backdrop-filter: blur(14px);
+    }
+    .glass-soft {
+      background: rgba(11, 22, 37, 0.82);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .form-field, .form-select, .form-textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #07101f;
+      color: #f8fafc;
+      transition: .18s ease;
+      outline: none;
+      min-height: 44px;
+      padding: 10px 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    .form-textarea { min-height: 190px; resize: vertical; }
+    .form-field:hover, .form-select:hover, .form-textarea:hover {
+      border-color: rgba(56, 189, 248, 0.42);
+    }
+    .form-field:focus, .form-select:focus, .form-textarea:focus {
+      border-color: rgba(56, 189, 248, 0.86);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+    }
+    .label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      color: #a5b4fc;
+      margin-bottom: 8px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(15, 23, 42, 0.82);
+      color: #dbeafe;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .16s ease;
+      user-select: none;
+    }
+    .chip:hover { border-color: rgba(56,189,248,.45); transform: translateY(-1px); }
+    .chip input { accent-color: #38bdf8; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav-tab {
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(10, 18, 32, 0.74);
+      color: #cbd5e1;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      transition: .18s ease;
+    }
+    .nav-tab:hover { border-color: rgba(56,189,248,.4); color: white; }
+    .nav-tab.active {
+      background: linear-gradient(135deg, rgba(2,132,199,.28), rgba(79,70,229,.28));
+      color: white;
+      border-color: rgba(56,189,248,.34);
+      box-shadow: 0 10px 28px rgba(2,132,199,.16);
+    }
+    .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-weight: 800;
+      transition: .18s ease;
+      border: 1px solid rgba(125,211,252,.24);
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      color: white;
+      box-shadow: 0 12px 28px rgba(2,132,199,.22);
+    }
+    .primary-btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .secondary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-weight: 800;
+      background: rgba(15, 23, 42, 0.86);
+      color: #e2e8f0;
+      border: 1px solid rgba(148,163,184,.2);
+      transition: .18s ease;
+    }
+    .secondary-btn:hover { border-color: rgba(56,189,248,.42); transform: translateY(-1px); }
+    .danger-btn {
+      background: rgba(190,24,93,.12);
+      color: #fecdd3;
+      border: 1px solid rgba(251,113,133,.28);
+    }
+    .danger-btn:hover { border-color: rgba(251,113,133,.45); }
+    .prompt-card {
+      border-radius: 22px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: linear-gradient(180deg, rgba(15,23,42,.88), rgba(8,15,29,.92));
+      box-shadow: 0 18px 52px rgba(2, 6, 23, 0.22);
+    }
+    .prompt-card h3 { letter-spacing: -0.02em; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border: 1px solid rgba(56,189,248,.22);
+      color: #bae6fd;
+      background: rgba(56,189,248,.08);
+    }
+    .helper {
+      font-size: .82rem;
+      color: #93a4bf;
+      line-height: 1.55;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .toast {
+      min-width: 240px;
+      max-width: 360px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: rgba(3, 10, 20, 0.95);
+      color: #e2e8f0;
+      padding: 12px 14px;
+      box-shadow: 0 20px 40px rgba(2,6,23,.35);
+      animation: slideIn .24s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .soon-card {
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: radial-gradient(circle at top, rgba(56,189,248,.12), transparent 26%), linear-gradient(180deg, rgba(15,23,42,.94), rgba(8,15,29,.96));
+    }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: rgba(15,23,42,.55); }
+    ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.85); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(125,211,252,.7); }
+
+
+    .color-preview-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .color-preview-swatch {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
+      border-radius: 999px;
+      border: 2px solid rgba(148,163,184,.50);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 3px 12px rgba(2,6,23,.22);
+    }
+    .color-preview-control .form-select { flex: 1; min-width: 0; }
+    body.light-theme .color-preview-swatch {
+      border-color: rgba(100,116,139,.55);
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,.08), 0 3px 10px rgba(15,23,42,.12);
+    }
+
+    body.light-theme {
+      color: #0f172a;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.12), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.10), transparent 28%),
+        linear-gradient(180deg, #eff6ff 0%, #f8fafc 48%, #e2e8f0 100%);
+    }
+    body.light-theme::before {
+      background-image:
+        linear-gradient(rgba(148,163,184,.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148,163,184,.12) 1px, transparent 1px);
+    }
+    body.light-theme .glass {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      box-shadow: 0 20px 50px rgba(148, 163, 184, 0.18);
+    }
+    body.light-theme .glass-soft,
+    body.light-theme .prompt-card,
+    body.light-theme .soon-card {
+      background: rgba(255, 255, 255, 0.90);
+      border-color: rgba(148, 163, 184, 0.28);
+      box-shadow: 0 14px 40px rgba(148, 163, 184, 0.12);
+    }
+    body.light-theme .form-field,
+    body.light-theme .form-select,
+    body.light-theme .form-textarea {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: rgba(148, 163, 184, 0.34);
+      box-shadow: inset 0 1px 0 rgba(2, 6, 23, 0.02);
+    }
+    body.light-theme .chip,
+    body.light-theme .secondary-btn,
+    body.light-theme .nav-tab,
+    body.light-theme .toast {
+      background: rgba(255,255,255,0.95);
+      color: #0f172a;
+      border-color: rgba(148, 163, 184, 0.34);
+    }
+    body.light-theme .secondary-btn.danger-btn {
+      background: rgba(190,24,93,.06);
+      color: #9f1239;
+      border-color: rgba(251,113,133,.32);
+    }
+    body.light-theme .nav-tab.active {
+      color: #0f172a;
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.42), rgba(165, 180, 252, 0.42));
+    }
+    body.light-theme .label { color: #4338ca; }
+    body.light-theme .helper { color: #64748b; }
+    body.light-theme .text-white,
+    body.light-theme .text-slate-200,
+    body.light-theme .text-slate-300,
+    body.light-theme .text-slate-300\/90,
+    body.light-theme .text-slate-400 { color: #0f172a !important; }
+    body.light-theme .badge { background: rgba(56,189,248,.12); color: #0369a1; }
+    body.light-theme .mono { color: #0f172a; }
+    body.light-theme footer p { color: #475569; }
+
+    @media (max-width: 768px) {
+      .form-textarea { min-height: 160px; }
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen">
+  <div id="app-toast-container" class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto px-4 py-6 md:py-10 flex flex-col min-h-screen">
+    <header class="glass rounded-[28px] p-6 md:p-8 mb-6 md:mb-8">
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-3 uppercase">
+            <span>IMAGE PROMPT GENERATOR</span>
+            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.14</span>
+          </h1>
+          <p class="mt-3 max-w-4xl text-slate-300/90 leading-relaxed text-sm md:text-base">
+            Generador de prompts académicos para Unifranz Online con personalización general e individual y lógica visual segura.
+          </p>
+        </div>
+        <div class="flex md:justify-end">
+          <button id="theme-toggle-btn" class="secondary-btn"><i id="theme-toggle-icon" class="fa-regular fa-sun"></i><span id="theme-toggle-label">Modo claro</span></button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="mb-6 flex flex-wrap gap-3" aria-label="Navegación principal">
+      <button class="nav-tab active" data-page-target="page-1"><i class="fa-solid fa-1 mr-2"></i>Generador Hitos</button>
+      <button class="nav-tab" data-page-target="page-2"><i class="fa-solid fa-2 mr-2"></i>Generador Banners</button>
+    </nav>
+
+    <main class="flex-1">
+      <section id="page-1" class="page active space-y-6">
+        <section class="glass rounded-[26px] p-4 md:p-5">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white tracking-tight">Configuración general</h2>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="generate-all-btn" class="primary-btn"><i class="fa-solid fa-wand-magic-sparkles"></i>Generar todo</button>
+              <button id="copy-all-btn" class="secondary-btn"><i class="fa-solid fa-copy"></i>Copiar todo</button>
+              <button id="autofill-btn" class="secondary-btn"><i class="fa-solid fa-brain"></i>Autocompletar</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div>
+              <label class="label" for="subject-name">Nombre de la materia</label>
+              <input id="subject-name" class="form-field" type="text" placeholder="Ej. Metodología de la Investigación" />
+            </div>
+            <div>
+              <label class="label" for="career">Carrera</label>
+              <select id="career" class="form-select">
+                <option value="DER">Derecho (DER)</option>
+                <option value="ICO">Ingeniería Comercial (ICO)</option>
+                <option value="ADM">Administración (ADM)</option>
+                <option value="PYM">Publicidad y Marketing (PYM)</option>
+                <option value="CPU">Contaduría Pública (CPU)</option>
+                <option value="MULTI">Multicarrera / General</option>
+                <option value="OTHER">Otra</option>
+              </select>
+            </div>
+            <div>
+              <label class="label" for="profession-reference">Profesión de referencia</label>
+              <select id="profession-reference" class="form-select"></select>
+            </div>
+            <div>
+              <label class="label" for="nationality-context">Contexto de ubicación (nacionalidad)</label>
+              <select id="nationality-context" class="form-select">
+                <option value="bolivian">Boliviano/a</option>
+                <option value="peruvian">Peruano/a</option>
+                <option value="argentinian">Argentino/a</option>
+                <option value="chilean">Chileno/a</option>
+                <option value="colombian">Colombiano/a</option>
+                <option value="ecuadorian">Ecuatoriano/a</option>
+                <option value="brazilian">Brasileño/a</option>
+                <option value="paraguayan">Paraguayo/a</option>
+                <option value="mexican">Mexicano/a</option>
+                <option value="latin_american">Latinoamericano/a</option>
+                <option value="international">Internacional</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 xl:grid-cols-[1.2fr_.8fr] gap-4">
+            <div class="glass-soft rounded-2xl p-4">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <h3 class="text-base font-bold text-white">Parámetros del renderizador de imagen</h3>
+                <div class="flex flex-wrap gap-2">
+                  <button id="select-all-render-rules" class="secondary-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-check-double"></i>Todo</button>
+                  <button id="clear-render-rules" class="secondary-btn !py-2 !px-3 text-xs danger-btn"><i class="fa-solid fa-xmark"></i>Limpiar</button>
+                </div>
+              </div>
+              <div id="render-rules-container" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div class="glass-soft rounded-2xl p-4">
+              <div class="grid grid-cols-1 gap-3 text-sm">
+                <div class="rounded-2xl border border-slate-700/70 bg-slate-950/40 p-3">
+                  <div class="text-sky-300 font-semibold mb-1">Dominio detectado</div>
+                  <div id="detected-domain" class="text-slate-200">Pendiente</div>
+                </div>
+                <div class="rounded-2xl border border-slate-700/70 bg-slate-950/40 p-3">
+                  <div class="text-sky-300 font-semibold mb-1">Narrativa base</div>
+                  <div id="detected-summary" class="text-slate-300 leading-relaxed">Completa la materia y la carrera para ver un resumen sugerido.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+            <div>
+              <h2 class="text-2xl font-extrabold tracking-tight text-white">Prompts por bloque de plantilla</h2>
+              <p class="helper mt-1">Cada tarjeta permite un control individual completo del prompt.</p>
+            </div>
+            <div class="helper">Las salidas se guardan automáticamente en tu navegador.</div>
+          </div>
+          <div id="prompt-cards" class="grid grid-cols-1 2xl:grid-cols-2 gap-5"></div>
+        </section>
+      </section>
+
+      <section id="page-2" class="page space-y-6">
+        <section class="glass rounded-[26px] p-4 md:p-5">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+            <div>
+              <h2 class="text-2xl font-extrabold text-white tracking-tight">Configuración general de banners</h2>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="generate-all-banners-btn" class="primary-btn"><i class="fa-solid fa-wand-magic-sparkles"></i>Generar 14 prompts</button>
+              <button id="copy-all-banners-btn" class="secondary-btn"><i class="fa-solid fa-copy"></i>Copiar todo</button>
+              <button id="sync-banner-config-btn" class="secondary-btn"><i class="fa-solid fa-rotate"></i>Usar configuración de Hitos</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div>
+              <label class="label" for="banner-subject-name">Nombre de la materia</label>
+              <input id="banner-subject-name" class="form-field" type="text" placeholder="Ej. Estrategias Digitales" />
+            </div>
+            <div>
+              <label class="label" for="banner-career">Carrera</label>
+              <select id="banner-career" class="form-select">
+                <option value="DER">Derecho (DER)</option>
+                <option value="ICO">Ingeniería Comercial (ICO)</option>
+                <option value="ADM">Administración (ADM)</option>
+                <option value="PYM">Publicidad y Marketing (PYM)</option>
+                <option value="CPU">Contaduría Pública (CPU)</option>
+                <option value="MULTI">Multicarrera / General</option>
+                <option value="OTHER">Otra</option>
+              </select>
+            </div>
+            <div>
+              <label class="label" for="banner-profession-reference">Profesión de referencia</label>
+              <select id="banner-profession-reference" class="form-select"></select>
+            </div>
+            <div>
+              <label class="label" for="banner-nationality-context">Contexto de ubicación (nacionalidad)</label>
+              <select id="banner-nationality-context" class="form-select">
+                <option value="bolivian">Boliviano/a</option>
+                <option value="peruvian">Peruano/a</option>
+                <option value="argentinian">Argentino/a</option>
+                <option value="chilean">Chileno/a</option>
+                <option value="colombian">Colombiano/a</option>
+                <option value="ecuadorian">Ecuatoriano/a</option>
+                <option value="brazilian">Brasileño/a</option>
+                <option value="paraguayan">Paraguayo/a</option>
+                <option value="mexican">Mexicano/a</option>
+                <option value="latin_american">Latinoamericano/a</option>
+                <option value="international">Internacional</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="mb-4">
+            <h2 class="text-2xl font-extrabold tracking-tight text-white">Prompts para banners de plantilla</h2>
+            <p class="helper mt-1">Columna izquierda: H1 a H5 y comunicación docente. Columna derecha: ocho bloques individuales.</p>
+          </div>
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div>
+              <h3 class="text-lg font-extrabold text-white mb-3">Banners Hitos y docente</h3>
+              <div id="banner-left-cards" class="space-y-5"></div>
+            </div>
+            <div>
+              <h3 class="text-lg font-extrabold text-white mb-3">Banners de actividades</h3>
+              <div id="banner-right-cards" class="space-y-5"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="mt-10 pt-6 border-t border-slate-800/80 text-center">
+      <p class="text-xs font-semibold tracking-[.18em] uppercase text-slate-400">Created by Moises Luna for Unifranz Online</p>
+    </footer>
+  </div>
+
+  <script>
+    const APP_VERSION = 'v1.0.14';
+    const STORAGE_KEY = 'image_prompt_generator_v1_0_14';
+    const THEME_KEY = 'image_prompt_generator_theme_v1_0_14';
+
+    const renderRules = [
+      { id: 'avoid_bad_hands', label: 'Evitar manos deformes o dedos extra', promptLabel: 'avoid deformed hands or extra fingers' },
+      { id: 'avoid_floating_objects', label: 'Evitar objetos flotantes o sin apoyo', promptLabel: 'avoid floating or unsupported objects' },
+      { id: 'avoid_unreadable_text', label: 'Evitar texto ilegible o excesivo', promptLabel: 'avoid unreadable or excessive visible text' },
+      { id: 'avoid_plastic_skin', label: 'Evitar piel plástica o sobreprocesada', promptLabel: 'avoid plastic-looking or overprocessed skin' },
+      { id: 'avoid_stiff_pose', label: 'Evitar posturas rígidas o poco naturales', promptLabel: 'avoid stiff or unnatural poses' },
+      { id: 'avoid_misaligned_gaze', label: 'Evitar mirada, manos y dispositivo desalineados', promptLabel: 'avoid misalignment between gaze, hands, and the active device' },
+      { id: 'avoid_duplicate_objects', label: 'Evitar duplicación de objetos o extremidades', promptLabel: 'avoid duplicated objects or limbs' },
+      { id: 'avoid_distorted_devices', label: 'Evitar laptops, tablets o móviles distorsionados', promptLabel: 'avoid distorted laptops, tablets, smartphones, or screens' },
+      { id: 'avoid_clutter', label: 'Evitar exceso de elementos y ruido visual', promptLabel: 'avoid clutter and unnecessary visual noise' },
+      { id: 'avoid_flat_lighting', label: 'Evitar iluminación plana o inconsistente', promptLabel: 'avoid flat or inconsistent lighting' },
+      { id: 'avoid_awkward_expression', label: 'Evitar expresiones extrañas o forzadas', promptLabel: 'avoid awkward or forced facial expressions' },
+      { id: 'avoid_background_artifacts', label: 'Evitar deformaciones en fondo, muebles o arquitectura', promptLabel: 'avoid artifacts or distortions in backgrounds, furniture, and architecture' }
+    ];
+    const professionOptions = {
+      common: [
+        { value: 'auto', label: 'Auto según materia y carrera' },
+        { value: 'legal_advisor', label: 'Asesor/a legal' },
+        { value: 'research_consultant', label: 'Consultor/a de investigación' },
+        { value: 'business_analyst', label: 'Analista de negocios' },
+        { value: 'operations_manager', label: 'Gerente de operaciones' },
+        { value: 'marketing_strategist', label: 'Estratega de marketing' },
+        { value: 'creative_director', label: 'Director/a creativo/a' },
+        { value: 'tax_auditor', label: 'Auditor/a tributario/a' },
+        { value: 'financial_analyst', label: 'Analista financiero/a' },
+        { value: 'data_analyst', label: 'Analista de datos / BI' },
+        { value: 'university_facilitator', label: 'Facilitador/a universitario/a' }
+      ]
+    };
+
+    const optionSets = {
+      gender: [
+        ['auto', 'Auto'],
+        ['woman', 'Mujer'],
+        ['man', 'Hombre'],
+        ['non_binary', 'No binario'],
+        ['mixed_group', 'Grupo mixto']
+      ],
+      light: [
+        ['morning_soft', 'Mañana suave'],
+        ['daylight_neutral', 'Luz de día neutra'],
+        ['afternoon_warm', 'Tarde cálida'],
+        ['evening_corporate', 'Noche corporativa'],
+        ['bright_studio', 'Estudio brillante']
+      ],
+      environment: [
+        ['auto', 'Auto según materia'],
+        ['law_office', 'Bufete / oficina legal'],
+        ['meeting_room', 'Sala de reuniones'],
+        ['executive_office', 'Oficina ejecutiva'],
+        ['accounting_office', 'Gabinete contable'],
+        ['marketing_studio', 'Estudio creativo / marketing'],
+        ['innovation_lab', 'Laboratorio de innovación'],
+        ['research_workspace', 'Espacio de investigación'],
+        ['modern_classroom', 'Aula moderna'],
+        ['library', 'Biblioteca / archivo'],
+        ['home_office', 'Home office profesional']
+      ],
+      device: [
+        ['auto', 'Auto según escena'],
+        ['laptop', 'Laptop'],
+        ['desktop', 'Desktop'],
+        ['tablet', 'Tablet'],
+        ['smartphone', 'Smartphone'],
+        ['dual_monitor', 'Doble monitor'],
+        ['printed_only', 'Solo impresos'],
+        ['none', 'Sin dispositivo visible']
+      ],
+      cameraAngle: [
+        ['eye_level', 'A la altura de cámara'],
+        ['three_quarter', '3/4 frontal'],
+        ['slight_low', 'Leve contrapicado'],
+        ['slight_high', 'Leve picado'],
+        ['over_shoulder', 'Over the shoulder']
+      ],
+      composition: [
+        ['medium_shot', 'Plano medio editorial'],
+        ['half_body', 'Medio cuerpo'],
+        ['desk_focused', 'Encuadre enfocado al escritorio'],
+        ['wide_context', 'Plano amplio contextual'],
+        ['symmetrical', 'Composición simétrica'],
+        ['rule_of_thirds', 'Regla de tercios']
+      ],
+      ageRange: [
+        ['auto', 'Auto según hito'],
+        ['18_24', '18 - 24 años'],
+        ['25_34', '25 - 34 años'],
+        ['35_44', '35 - 44 años'],
+        ['45_54', '45 - 54 años'],
+        ['55_plus', '55 años o más']
+      ],
+      groupCount: [
+        ['2', '2 personas'],
+        ['3', '3 personas'],
+        ['4', '4 personas'],
+        ['5', '5 personas'],
+        ['6', '6 personas o más']
+      ],
+      tools: [
+        ['auto', 'Auto según materia'],
+        ['legal_files', 'Expedientes legales y libros'],
+        ['business_reports', 'Reportes ejecutivos y KPIs'],
+        ['marketing_assets', 'Moodboard, piezas y briefing'],
+        ['financial_docs', 'Estados financieros y calculadora'],
+        ['research_materials', 'Fuentes, notas y fichas'],
+        ['presentation_tools', 'Pizarra, notas y presentación'],
+        ['notebook_basic', 'Cuaderno y bolígrafo'],
+        ['mixed_tools', 'Herramientas mixtas']
+      ],
+      facialStyle: [
+        ['latino_corporate', 'Latino/a corporativo/a'],
+        ['mestizo_professional', 'Rasgos mestizos profesionales'],
+        ['andean_refined', 'Andino refinado'],
+        ['soft_executive', 'Ejecutivo/a de facciones suaves'],
+        ['modern_professional', 'Profesional moderno/a'],
+        ['afrolatin_professional', 'Afrolatino/a profesional']
+      ],
+      businessStyle: [
+        ['executive_formal', 'Ejecutivo formal'],
+        ['business_casual', 'Business casual'],
+        ['smart_casual_premium', 'Smart casual premium'],
+        ['legal_classic', 'Jurídico clásico'],
+        ['financial_sophisticated', 'Financiero sofisticado'],
+        ['creative_professional', 'Creativo profesional']
+      ]
+    };
+
+    const professionalClothingColors = [
+      { display: "Blanco ejecutivo", val: "white", hex: "#f8fafc" },
+      { display: "Azul marino", val: "navy blue", hex: "#0f172a" },
+      { display: "Celeste profesional", val: "light blue", hex: "#bae6fd" },
+      { display: "Azul petróleo", val: "petrol blue", hex: "#0891b2" },
+      { display: "Gris perla", val: "pearl gray", hex: "#cbd5e1" },
+      { display: "Gris carbón", val: "charcoal gray", hex: "#475569" },
+      { display: "Negro sobrio", val: "black", hex: "#020617" },
+      { display: "Beige elegante", val: "soft beige", hex: "#f5ebe0" },
+      { display: "Arena claro", val: "sand beige", hex: "#e3d5ca" },
+      { display: "Marfil", val: "ivory", hex: "#fffbeb" },
+      { display: "Marrón chocolate", val: "chocolate brown", hex: "#451a03" },
+      { display: "Camel corporativo", val: "camel brown", hex: "#b45309" },
+      { display: "Verde oliva suave", val: "soft olive green", hex: "#8fa87a" },
+      { display: "Verde bosque", val: "forest green", hex: "#14532d" },
+      { display: "Violeta suave", val: "soft violet", hex: "#ddd6fe" },
+      { display: "Lavanda grisácea", val: "muted lavender", hex: "#9575cd" },
+      { display: "Malva ejecutivo", val: "muted mauve", hex: "#e879f9" },
+      { display: "Color vino", val: "wine red", hex: "#991b1b" },
+      { display: "Borgoña discreto", val: "deep burgundy", hex: "#7f1d1d" },
+      { display: "Terracota sobrio", val: "muted terracotta", hex: "#c2410c" },
+      { display: "Rosa empolvado", val: "dusty rose", hex: "#fbcfe8" }
+    ];
+
+    const appearanceProfiles = {
+      woman: {
+        hairStyle: [
+          { val: 'curly voluminous dark brown hair', display: 'Pelo rizado' },
+          { val: 'neatly tied-up professional hair bun', display: 'Pelo recogido' },
+          { val: 'long sleek straight dark hair', display: 'Lacio largo' },
+          { val: 'modern short straight professional bob haircut', display: 'Lacio corto' }
+        ],
+        accessory: [
+          { val: 'wearing modern design spectacles', display: 'Con lentes' },
+          { val: 'without glasses', display: 'Sin lentes' }
+        ],
+        clothingType: [
+          { val: 'elegant professional blouse', display: 'Blusa elegante' },
+          { val: 'executive button-up shirt', display: 'Camisa ejecutiva' },
+          { val: 'tailored business suit', display: 'Traje ejecutivo' }
+        ]
+      },
+      man: {
+        hairStyle: [
+          { val: 'neat short corporate haircut', display: 'Cabello corto' },
+          { val: 'shaved clean head', display: 'Corto / rapado' },
+          { val: 'wavy professional dark hair', display: 'Ondulado' },
+          { val: 'sleek straight short hair', display: 'Lacio' }
+        ],
+        facialHair: [
+          { val: 'with a well-groomed clean professional short beard', display: 'Con barba corta' },
+          { val: 'with subtle professional stubble', display: 'Barba muy corta' },
+          { val: 'clean-shaven with natural facial texture', display: 'Sin barba' }
+        ],
+        accessory: [
+          { val: 'wearing elegant office spectacles', display: 'Con lentes' },
+          { val: 'without glasses', display: 'Sin lentes' }
+        ],
+        clothingType: [
+          { val: 'executive button-up shirt', display: 'Camisa' },
+          { val: 'tailored business suit', display: 'Traje' },
+          { val: 'clean professional polo shirt', display: 'Polera profesional' }
+        ]
+      },
+      neutral: {
+        hairStyle: [
+          { val: 'neat short professional hair', display: 'Pelo profesional corto' },
+          { val: 'sleek tied-back dark corporate hair', display: 'Pelo largo recogido' }
+        ],
+        accessory: [
+          { val: 'wearing elegant corporate glasses', display: 'Lentes corporativos' },
+          { val: 'no accessories', display: 'Sin accesorios' }
+        ],
+        clothingType: [
+          { val: 'professional business outfit', display: 'Traje ejecutivo neutro' },
+          { val: 'executive button-up shirt', display: 'Camisa ejecutiva' }
+        ]
+      },
+      mixed: {
+        hairStyle: [
+          { val: 'coordinated professional hairstyles appropriate for a mixed-gender team', display: 'Estilo coordinado de equipo' },
+          { val: 'well-groomed varied professional hairstyles', display: 'Peinados variados profesionales' }
+        ],
+        accessory: [
+          { val: 'subtle corporate eyewear or minimal accessories when appropriate', display: 'Accesorios sutiles' },
+          { val: 'minimal or no accessories', display: 'Sin accesorios notorios' }
+        ],
+        clothingType: [
+          { val: 'coordinated business casual outfits', display: 'Business casual coordinado' },
+          { val: 'coordinated professional business outfits', display: 'Vestimenta corporativa coordinada' }
+        ]
+      }
+    };
+
+    const HITO_CONFIGS = [
+      {
+        key: 'header',
+        title: 'header',
+        subtitle: 'Presentación general de la asignatura, con una persona como protagonista.',
+        phase: 'Presentación general de la asignatura',
+        defaultSubject: 'professional_single',
+        defaultDevice: 'auto',
+        defaultTools: 'auto',
+        defaultComposition: 'medium_shot',
+        defaultEnvironment: 'auto'
+      },
+      {
+        key: 'tar_hito1',
+        title: 'tar_hito1',
+        subtitle: 'Diagnóstico (Evaluación en línea / Refuerzo)',
+        phase: 'Diagnóstico',
+        defaultSubject: 'adult_student',
+        defaultDevice: 'laptop',
+        defaultTools: 'auto',
+        defaultComposition: 'desk_focused',
+        defaultEnvironment: 'auto'
+      },
+      {
+        key: 'tar_hito2',
+        title: 'tar_hito2',
+        subtitle: 'Avance (Aplicación de Conceptos)',
+        phase: 'Avance',
+        defaultSubject: 'professional_single',
+        defaultDevice: 'laptop',
+        defaultTools: 'auto',
+        defaultComposition: 'rule_of_thirds',
+        defaultEnvironment: 'auto'
+      },
+      {
+        key: 'tar_hito3',
+        title: 'tar_hito3',
+        subtitle: 'Investigación (Aprendizaje Interactivo)',
+        phase: 'Investigación',
+        defaultSubject: 'adult_student',
+        defaultDevice: 'tablet',
+        defaultTools: 'research_materials',
+        defaultComposition: 'half_body',
+        defaultEnvironment: 'research_workspace'
+      },
+      {
+        key: 'tar_hito4',
+        title: 'tar_hito4',
+        subtitle: 'Innovación (Revisión de Desempeño)',
+        phase: 'Innovación',
+        defaultSubject: 'senior_executive',
+        defaultDevice: 'desktop',
+        defaultTools: 'presentation_tools',
+        defaultComposition: 'medium_shot',
+        defaultEnvironment: 'innovation_lab'
+      },
+      {
+        key: 'tar_hito5',
+        title: 'tar_hito5',
+        subtitle: 'Integración (Colaboración en Equipo, presentación final)',
+        phase: 'Integración',
+        defaultSubject: 'small_team',
+        defaultDevice: 'laptop',
+        defaultTools: 'presentation_tools',
+        defaultComposition: 'wide_context',
+        defaultEnvironment: 'meeting_room'
+      }
+    ];
+
+
+    const BANNER_CONFIGS = [
+      { key: 'banner_h1', title: 'banner_h1', subtitle: 'Banner del Hito 1 — Diagnóstico', phase: 'Diagnóstico', side: 'left', defaultSubject: 'adult_student', defaultDevice: 'laptop', defaultTools: 'notebook_basic', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
+      { key: 'banner_h2', title: 'banner_h2', subtitle: 'Banner del Hito 2 — Avance', phase: 'Avance', side: 'left', defaultSubject: 'professional_single', defaultDevice: 'laptop', defaultTools: 'business_reports', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
+      { key: 'banner_h3', title: 'banner_h3', subtitle: 'Banner del Hito 3 — Investigación', phase: 'Investigación', side: 'left', defaultSubject: 'adult_student', defaultDevice: 'tablet', defaultTools: 'research_materials', defaultComposition: 'desk_focused', defaultEnvironment: 'research_workspace' },
+      { key: 'banner_h4', title: 'banner_h4', subtitle: 'Banner del Hito 4 — Innovación', phase: 'Innovación', side: 'left', defaultSubject: 'senior_executive', defaultDevice: 'desktop', defaultTools: 'presentation_tools', defaultComposition: 'desk_focused', defaultEnvironment: 'innovation_lab' },
+      { key: 'banner_h5', title: 'banner_h5', subtitle: 'Banner del Hito 5 — Integración grupal', phase: 'Integración', side: 'left', defaultSubject: 'small_team', defaultDevice: 'laptop', defaultTools: 'presentation_tools', defaultComposition: 'wide_context', defaultEnvironment: 'meeting_room' },
+      { key: 'aes_311_com_docente', title: 'aes-311_com_docente', subtitle: 'Comunicación docente', phase: 'Comunicación docente', side: 'left', defaultSubject: 'mentor', defaultDevice: 'laptop', defaultTools: 'notebook_basic', defaultComposition: 'medium_shot', defaultEnvironment: 'home_office' },
+
+      { key: 'banner_aplic_s01', title: 'banner_aplic_s01', subtitle: 'Aplicación de conceptos', phase: 'Aplicación', side: 'right', defaultSubject: 'professional_single', defaultDevice: 'laptop', defaultTools: 'business_reports', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
+      { key: 'banner_plan_s01', title: 'banner_plan_s01', subtitle: 'Planificación y organización', phase: 'Planificación', side: 'right', defaultSubject: 'professional_single', defaultDevice: 'printed_only', defaultTools: 'notebook_basic', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
+      { key: 'banner_gam_s01', title: 'banner_gam_s01', subtitle: 'Gamificación y aprendizaje activo', phase: 'Gamificación', side: 'right', defaultSubject: 'adult_student', defaultDevice: 'tablet', defaultTools: 'mixed_tools', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
+      { key: 'banner_afi_s01', title: 'banner_afi_s01', subtitle: 'Afianzamiento de conocimientos', phase: 'Afianzamiento', side: 'right', defaultSubject: 'adult_student', defaultDevice: 'laptop', defaultTools: 'research_materials', defaultComposition: 'medium_shot', defaultEnvironment: 'home_office' },
+      { key: 'banner_cont_s01', title: 'banner_cont_s01', subtitle: 'Contenido académico', phase: 'Contenido', side: 'right', defaultSubject: 'professional_single', defaultDevice: 'laptop', defaultTools: 'research_materials', defaultComposition: 'medium_shot', defaultEnvironment: 'auto' },
+      { key: 'banner_reflex_s01', title: 'banner_reflex_s01', subtitle: 'Pregunta reflexiva', phase: 'Reflexión', side: 'right', defaultSubject: 'adult_student', defaultDevice: 'printed_only', defaultTools: 'notebook_basic', defaultComposition: 'medium_shot', defaultEnvironment: 'home_office' },
+      { key: 'banner_proyecto_s01', title: 'banner_proyecto_s01', subtitle: 'Actividad de proyecto', phase: 'Proyecto', side: 'right', defaultSubject: 'professional_single', defaultDevice: 'laptop', defaultTools: 'presentation_tools', defaultComposition: 'medium_shot', defaultEnvironment: 'auto' },
+      { key: 'banner_foro_s01', title: 'banner_foro_s01', subtitle: 'Participación en foro', phase: 'Foro', side: 'right', defaultSubject: 'adult_student', defaultDevice: 'laptop', defaultTools: 'notebook_basic', defaultComposition: 'medium_shot', defaultEnvironment: 'home_office' }
+    ];
+
+    const careerData = {
+      DER: { label: 'Derecho', defaultProfession: 'legal_advisor', defaultDomain: 'law' },
+      ICO: { label: 'Ingeniería Comercial', defaultProfession: 'business_analyst', defaultDomain: 'business' },
+      ADM: { label: 'Administración', defaultProfession: 'operations_manager', defaultDomain: 'management' },
+      PYM: { label: 'Publicidad y Marketing', defaultProfession: 'marketing_strategist', defaultDomain: 'marketing' },
+      CPU: { label: 'Contaduría Pública', defaultProfession: 'tax_auditor', defaultDomain: 'accounting' },
+      MULTI: { label: 'Multicarrera / General', defaultProfession: 'university_facilitator', defaultDomain: 'research' },
+      OTHER: { label: 'Otra', defaultProfession: 'business_analyst', defaultDomain: 'business' }
+    };
+
+    const domainProfiles = {
+      law: {
+        label: 'Jurídico / legal',
+        autoSummary: 'Entornos legales, documentación formal, revisión de normas, contratos, doctrina y análisis de casos.',
+        professionFallback: 'legal_advisor',
+        environments: ['law_office', 'library', 'meeting_room', 'executive_office'],
+        devices: ['laptop', 'printed_only', 'tablet'],
+        tools: ['legal_files', 'notebook_basic', 'presentation_tools'],
+        phaseActions: {
+          header: 'introducing the subject through a confident legal professional immersed in academic and professional legal work',
+          tar_hito1: 'reviewing legal materials for an online diagnostic evaluation and reinforcement activity',
+          tar_hito2: 'applying legal concepts to a practical professional scenario related to the subject',
+          tar_hito3: 'researching doctrine, legal sources, jurisprudence, or structured learning materials in an interactive study process',
+          tar_hito4: 'reviewing legal performance, refining reasoning, and improving proposed solutions in an innovation-oriented moment',
+          tar_hito5: 'collaborating in a final legal presentation with a small team, integrating conclusions and deliverables'
+        },
+        objectPhrases: 'legal files, annotated documents, law books, organized notes, and subtle institutional details'
+      },
+      marketing: {
+        label: 'Marketing / creatividad',
+        autoSummary: 'Escenas creativas, estrategia de marca, campañas, análisis de audiencias, contenido y revisión de propuestas visuales.',
+        professionFallback: 'marketing_strategist',
+        environments: ['marketing_studio', 'innovation_lab', 'meeting_room', 'home_office'],
+        devices: ['laptop', 'tablet', 'desktop', 'smartphone'],
+        tools: ['marketing_assets', 'presentation_tools', 'notebook_basic'],
+        phaseActions: {
+          header: 'introducing the subject through a creative professional with a polished, strategic, and contemporary presence',
+          tar_hito1: 'evaluating the subject through online assessment, concept reinforcement, or diagnostic review of creative criteria',
+          tar_hito2: 'applying branding, marketing, or communication concepts to a practical case',
+          tar_hito3: 'researching references, audience insights, or learning materials in an interactive study process',
+          tar_hito4: 'reviewing performance, testing ideas, and refining creative or strategic outputs with an innovation mindset',
+          tar_hito5: 'collaborating in a final team presentation, aligning campaign ideas and academic deliverables'
+        },
+        objectPhrases: 'campaign notes, printed layouts, moodboards, brand references, color swatches, and polished creative materials'
+      },
+      accounting: {
+        label: 'Contable / auditoría / tributario',
+        autoSummary: 'Oficinas contables, auditoría, revisión de cifras, normativa tributaria, documentos financieros y análisis de estados.',
+        professionFallback: 'tax_auditor',
+        environments: ['accounting_office', 'executive_office', 'meeting_room', 'research_workspace'],
+        devices: ['laptop', 'desktop', 'printed_only', 'tablet'],
+        tools: ['financial_docs', 'notebook_basic', 'presentation_tools'],
+        phaseActions: {
+          header: 'introducing the subject through a confident accounting or audit professional in a credible work-study context',
+          tar_hito1: 'reviewing documents for an online diagnostic evaluation and foundational reinforcement',
+          tar_hito2: 'applying accounting, auditing, tax, or finance concepts to a practical case',
+          tar_hito3: 'researching evidence, standards, or learning materials in an interactive study process',
+          tar_hito4: 'reviewing performance indicators, checking findings, and refining conclusions with an innovation focus',
+          tar_hito5: 'integrating results in a final team presentation, collaboratively reviewing conclusions and recommendations'
+        },
+        objectPhrases: 'financial statements, audit papers, calculators, tax documents, organized files, and structured reports'
+      },
+      business: {
+        label: 'Negocios / comercial / finanzas',
+        autoSummary: 'Entornos corporativos con estrategia comercial, análisis de mercado, finanzas internacionales, dashboards y desarrollo de negocio.',
+        professionFallback: 'business_analyst',
+        environments: ['executive_office', 'meeting_room', 'innovation_lab', 'home_office'],
+        devices: ['laptop', 'desktop', 'tablet', 'dual_monitor'],
+        tools: ['business_reports', 'presentation_tools', 'mixed_tools'],
+        phaseActions: {
+          header: 'introducing the subject through a professional connected to strategy, analytics, or business development',
+          tar_hito1: 'reviewing an online diagnostic task and reinforcement materials tied to business performance or conceptual understanding',
+          tar_hito2: 'applying commercial, financial, or business intelligence concepts to a realistic scenario',
+          tar_hito3: 'researching market, data, or structured learning inputs in an interactive learning process',
+          tar_hito4: 'reviewing performance, testing improvements, and refining decisions with an innovation perspective',
+          tar_hito5: 'collaborating on a final presentation with a small team, integrating data, analysis, and recommendations'
+        },
+        objectPhrases: 'business reports, KPI charts, market analysis sheets, dashboards, executive notes, and polished desk tools'
+      },
+      management: {
+        label: 'Gestión / administración',
+        autoSummary: 'Gestión de procesos, organización, revisión de desempeño, planificación y resolución de casos administrativos.',
+        professionFallback: 'operations_manager',
+        environments: ['executive_office', 'meeting_room', 'modern_classroom', 'home_office'],
+        devices: ['laptop', 'desktop', 'tablet'],
+        tools: ['business_reports', 'notebook_basic', 'presentation_tools'],
+        phaseActions: {
+          header: 'introducing the subject through a confident management professional with an organized executive presence',
+          tar_hito1: 'reviewing a diagnostic activity and reinforcement materials linked to management concepts',
+          tar_hito2: 'applying administrative or operational concepts to a practical case',
+          tar_hito3: 'researching evidence and structured content in an interactive learning process',
+          tar_hito4: 'reviewing performance, identifying improvements, and innovating operational decisions',
+          tar_hito5: 'integrating conclusions in a collaborative final presentation with a small team'
+        },
+        objectPhrases: 'operational plans, reports, schedules, strategic notes, and performance indicators'
+      },
+      research: {
+        label: 'Investigación / transversal',
+        autoSummary: 'Búsqueda de fuentes, análisis, toma de notas, lectura crítica, metodología y articulación académica.',
+        professionFallback: 'research_consultant',
+        environments: ['research_workspace', 'library', 'modern_classroom', 'home_office'],
+        devices: ['laptop', 'tablet', 'printed_only'],
+        tools: ['research_materials', 'notebook_basic', 'presentation_tools'],
+        phaseActions: {
+          header: 'introducing the subject through a focused academic-professional figure studying and organizing knowledge',
+          tar_hito1: 'reviewing diagnostic and reinforcement materials in an online academic learning moment',
+          tar_hito2: 'applying concepts to a structured academic or professional task',
+          tar_hito3: 'researching sources, comparing references, and learning interactively through guided inquiry',
+          tar_hito4: 'reviewing performance, revising outputs, and improving proposals with an innovation-oriented perspective',
+          tar_hito5: 'integrating results in a collaborative final presentation with clear teamwork dynamics'
+        },
+        objectPhrases: 'research notes, highlighted readings, organized printed material, notebooks, and academic reference tools'
+      }
+    };
+
+    const fieldLabels = {
+      gender: 'Identidad de género',
+      light: 'Hora del día (luz)',
+      environment: 'Entorno de ubicación',
+      device: 'Dispositivo utilizado',
+      cameraAngle: 'Ángulo de cámara',
+      composition: 'Composición del encuadre',
+      ageRange: 'Edad en rangos',
+      tools: 'Herramientas',
+      facialStyle: 'Facciones',
+      hairStyle: 'Estilo de cabello',
+      facialHair: 'Rasgo facial / barba',
+      accessory: 'Accesorio',
+      clothingType: 'Tipo de prenda',
+      clothingColor: 'Color de prenda',
+      businessStyle: 'Estilo de negocios seguro'
+    };
+
+    const fieldHelp = {
+      gender: 'Define el tipo de protagonista o grupo principal.',
+      light: 'Controla la atmósfera y la luz de la escena.',
+      environment: 'Selecciona dónde se desarrolla la acción.',
+      device: 'Elige el dispositivo o tipo de interacción principal.',
+      cameraAngle: 'Ajusta la percepción visual y la jerarquía del sujeto.',
+      composition: 'Controla el encuadre del resultado.',
+      ageRange: 'Define el rango de edad principal del sujeto o del grupo protagonista.',
+      groupCount: 'Define la cantidad aproximada de personas en la escena de integración.',
+      tools: 'Establece el conjunto de objetos relevantes.',
+      facialStyle: 'Determina el tipo de facciones o apariencia general.',
+      hairStyle: 'Selecciona el peinado o estilo de cabello.',
+      facialHair: 'Selecciona el estilo de barba para personajes masculinos.',
+      accessory: 'Selecciona el accesorio principal.',
+      clothingType: 'Selecciona el tipo de prenda.',
+      clothingColor: 'Selecciona el color principal de la prenda.',
+      businessStyle: 'Controla el vestuario y el lenguaje profesional.'
+    };
+
+
+    function normalizeAppearanceGender(gender) {
+      if (gender === 'woman' || gender === 'man') return gender;
+      if (gender === 'mixed_group') return 'mixed';
+      return 'neutral';
+    }
+
+    function getAppearanceProfile(gender) {
+      return appearanceProfiles[normalizeAppearanceGender(gender)] || appearanceProfiles.neutral;
+    }
+
+    function getAllowedClothingColors(gender, clothingType) {
+      const normalized = normalizeAppearanceGender(gender);
+      if (normalized === 'woman') {
+        return professionalClothingColors;
+      }
+      if (normalized === 'man') {
+        if (clothingType === 'tailored business suit') {
+          const suitVals = ['navy blue', 'charcoal gray', 'black', 'chocolate brown', 'deep burgundy', 'petrol blue', 'soft olive green'];
+          return professionalClothingColors.filter(c => suitVals.includes(c.val));
+        }
+        if (clothingType === 'executive button-up shirt') {
+          const shirtVals = ['white', 'light blue', 'ivory', 'soft beige', 'pearl gray', 'muted lavender', 'dusty rose', 'soft violet'];
+          return professionalClothingColors.filter(c => shirtVals.includes(c.val));
+        }
+        if (clothingType === 'clean professional polo shirt') {
+          const poloVals = ['navy blue', 'black', 'charcoal gray', 'forest green', 'petrol blue', 'wine red', 'soft beige', 'muted terracotta'];
+          return professionalClothingColors.filter(c => poloVals.includes(c.val));
+        }
+      }
+      if (normalized === 'mixed') {
+        const mixedVals = ['navy blue', 'light blue', 'pearl gray', 'charcoal gray', 'soft beige', 'ivory', 'petrol blue'];
+        return professionalClothingColors.filter(c => mixedVals.includes(c.val));
+      }
+      const neutralVals = ['white', 'navy blue', 'light blue', 'pearl gray', 'charcoal gray', 'black', 'soft beige', 'ivory'];
+      return professionalClothingColors.filter(c => neutralVals.includes(c.val));
+    }
+
+    function getDynamicFieldOptions(field, cardKey) {
+      const gender = document.getElementById(`${cardKey}-gender`)?.value || 'auto';
+      const profile = getAppearanceProfile(gender);
+      const clothingType = document.getElementById(`${cardKey}-clothingType`)?.value || profile.clothingType[0]?.val || '';
+      if (field === 'hairStyle') return profile.hairStyle;
+      if (field === 'facialHair') return profile.facialHair || [];
+      if (field === 'accessory') return profile.accessory;
+      if (field === 'clothingType') return profile.clothingType;
+      if (field === 'clothingColor') return getAllowedClothingColors(gender, clothingType);
+      return [];
+    }
+
+    function populateSelectOptions(select, options, selectedValue) {
+      const normalizedOptions = (options || []).map(opt => Array.isArray(opt) ? { val: opt[0], display: opt[1] } : opt);
+      select.innerHTML = '';
+      normalizedOptions.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.val;
+        option.textContent = opt.display;
+        select.appendChild(option);
+      });
+      if (!normalizedOptions.length) return;
+      const safeValue = normalizedOptions.some(opt => opt.val === selectedValue) ? selectedValue : normalizedOptions[0].val;
+      select.value = safeValue;
+    }
+
+    function getDefaultAppearanceValues(gender) {
+      const profile = getAppearanceProfile(gender);
+      const clothingType = profile.clothingType[0]?.val || '';
+      const colors = getAllowedClothingColors(gender, clothingType);
+      return {
+        hairStyle: profile.hairStyle[0]?.val || '',
+        facialHair: profile.facialHair?.[0]?.val || '',
+        accessory: profile.accessory[0]?.val || '',
+        clothingType,
+        clothingColor: colors[0]?.val || ''
+      };
+    }
+
+    function refreshAppearanceFields(cardKey, savedValues = {}) {
+      ['hairStyle', 'facialHair', 'accessory', 'clothingType', 'clothingColor'].forEach(field => {
+        const select = document.getElementById(`${cardKey}-${field}`);
+        if (!select) return;
+        const preferred = savedValues[field] ?? select.value;
+        populateSelectOptions(select, getDynamicFieldOptions(field, cardKey), preferred);
+      });
+      updateGenderSpecificFieldVisibility(cardKey);
+      updateColorPreview(cardKey);
+    }
+
+    function getDefaultFieldValues(card) {
+      const base = {
+        gender: (card.key === 'tar_hito5' || card.key === 'banner_h5') ? 'mixed_group' : 'auto',
+        light: 'daylight_neutral',
+        environment: card.defaultEnvironment,
+        device: card.defaultDevice,
+        cameraAngle: 'eye_level',
+        composition: card.defaultComposition,
+        ageRange: getDefaultAgeRange(card.key),
+        groupCount: (card.key === 'tar_hito5' || card.key === 'banner_h5') ? '4' : '3',
+        tools: card.defaultTools,
+        facialStyle: 'latino_corporate',
+        businessStyle: card.key === 'tar_hito3' ? 'business_casual' : 'smart_casual_premium'
+      };
+      return { ...base, ...getDefaultAppearanceValues(base.gender) };
+    }
+
+    function getAppearancePromptValue(field, value) {
+      if (!value) return '';
+      if (field === 'clothingColor') {
+        return professionalClothingColors.find(c => c.val === value)?.val || value;
+      }
+      return value;
+    }
+
+    function getDefaultAgeRange(cardKey) {
+      const map = {
+        header: '25_34',
+        tar_hito1: '25_34',
+        tar_hito2: '25_34',
+        tar_hito3: '25_34',
+        tar_hito4: '35_44',
+        tar_hito5: '25_34'
+      };
+      return map[cardKey] || '25_34';
+    }
+
+    function formatSelectValue(field, value) {
+      const list = optionSets[field] || [];
+      const found = list.find(item => item[0] === value);
+      return found ? found[1] : value;
+    }
+
+    function formatProfession(value) {
+      const found = professionOptions.common.find(opt => opt.value === value);
+      return found ? found.label : value;
+    }
+
+    function formatProfessionPrompt(value) {
+      const map = {
+        auto: 'auto',
+        legal_advisor: 'legal advisor',
+        research_consultant: 'research consultant',
+        business_analyst: 'business analyst',
+        operations_manager: 'operations manager',
+        marketing_strategist: 'marketing strategist',
+        creative_director: 'creative director',
+        tax_auditor: 'tax auditor',
+        financial_analyst: 'financial analyst',
+        data_analyst: 'data analyst',
+        university_facilitator: 'university facilitator'
+      };
+      return map[value] || String(value || '').replace(/_/g, ' ');
+    }
+
+    function careerLabel(careerCode) {
+      return (careerData[careerCode] || careerData.OTHER).label;
+    }
+
+    function careerLabelPrompt(careerCode) {
+      const map = {
+        DER: 'Law',
+        ICO: 'Commercial Engineering',
+        ADM: 'Business Administration',
+        PYM: 'Advertising and Marketing',
+        CPU: 'Public Accounting',
+        MULTI: 'Multidisciplinary / General',
+        OTHER: 'Other'
+      };
+      return map[careerCode] || 'Other';
+    }
+
+    function getPromptPhase(cardKey) {
+      const map = {
+        header: 'General Introduction',
+        tar_hito1: 'Diagnostic',
+        tar_hito2: 'Progress',
+        tar_hito3: 'Research',
+        tar_hito4: 'Innovation',
+        tar_hito5: 'Integration'
+      };
+      return map[cardKey] || 'Learning Phase';
+    }
+
+    function getPromptSubtitle(cardKey) {
+      const map = {
+        header: 'General presentation of the subject with one main protagonist.',
+        tar_hito1: 'Diagnostic stage focused on online assessment and reinforcement.',
+        tar_hito2: 'Progress stage focused on applying concepts.',
+        tar_hito3: 'Research stage focused on interactive learning.',
+        tar_hito4: 'Innovation stage focused on performance review.',
+        tar_hito5: 'Integration stage focused on teamwork and a final presentation.'
+      };
+      return map[cardKey] || '';
+    }
+
+    function getDomainPromptLabel(domain) {
+      const map = {
+        law: 'legal practice and academic law',
+        marketing: 'marketing and creative strategy',
+        accounting: 'accounting, audit, tax, and finance practice',
+        business: 'business strategy, analytics, and commercial development',
+        management: 'management and operational leadership',
+        research: 'academic research and structured learning'
+      };
+      return map[domain] || 'professional academic work';
+    }
+
+    function titleCase(value) {
+      return String(value || '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function detectDomain(subjectName, careerCode) {
+      const subject = (subjectName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      const keywordSets = {
+        research: ['metodologia', 'investigacion', 'tesis', 'metodo', 'metodos', 'research'],
+        marketing: ['branding', 'publicidad', 'marketing', 'estrategias digitales', 'campana', 'creativa', 'comunicacion', 'marca'],
+        accounting: ['auditoria', 'impositiva', 'tributaria', 'tributario', 'contabilidad', 'fiscal', 'gabinete de auditoria', 'balance', 'financiero', 'finanzas'],
+        law: ['derecho', 'legislacion', 'jurid', 'juris', 'municipal', 'internacional publico', 'internacional', 'civil', 'penal', 'normativa'],
+        business: ['business intelligence', 'negocios', 'comercial', 'inteligencia', 'mercado', 'finanzas internacionales', 'comercio internacional'],
+        management: ['administracion', 'operaciones', 'proyecto integrador', 'gestion', 'estrategia', 'gerencia']
+      };
+
+      if (keywordSets.research.some(k => subject.includes(k))) return 'research';
+      if (keywordSets.marketing.some(k => subject.includes(k))) return 'marketing';
+      if (keywordSets.accounting.some(k => subject.includes(k))) {
+        if (subject.includes('finanzas internacionales') && careerCode === 'ICO') return 'business';
+        return 'accounting';
+      }
+      if (keywordSets.law.some(k => subject.includes(k))) return 'law';
+      if (keywordSets.business.some(k => subject.includes(k))) return 'business';
+      if (keywordSets.management.some(k => subject.includes(k))) {
+        if (subject.includes('proyecto integrador')) {
+          if (careerCode === 'DER') return 'law';
+          if (careerCode === 'CPU') return 'accounting';
+          if (careerCode === 'PUB' || careerCode === 'PYM') return 'marketing';
+          if (careerCode === 'ADM') return 'management';
+          if (careerCode === 'ICO') return 'business';
+        }
+        return 'management';
+      }
+
+      return (careerData[careerCode] || careerData.OTHER).defaultDomain;
+    }
+
+    function autoProfession(subjectName, careerCode) {
+      const domain = detectDomain(subjectName, careerCode);
+      return (domainProfiles[domain] || domainProfiles.business).professionFallback;
+    }
+
+    function inferDisciplineContext(subjectName, careerCode) {
+      const domain = detectDomain(subjectName, careerCode);
+      const profile = domainProfiles[domain] || domainProfiles.business;
+      return { domain, profile };
+    }
+
+    function optionToNarrative(type, value, domain) {
+      const profile = domainProfiles[domain] || domainProfiles.business;
+      const map = {
+        gender: {
+          auto: 'a professionally styled protagonist that best fits the scene',
+          woman: 'a woman professional',
+          man: 'a man professional',
+          non_binary: 'a non-binary professional',
+          mixed_group: 'a mixed-gender professional group'
+        },
+        light: {
+          morning_soft: 'soft morning light',
+          daylight_neutral: 'neutral daylight',
+          afternoon_warm: 'warm afternoon light',
+          evening_corporate: 'controlled evening corporate lighting',
+          bright_studio: 'clean bright studio-like lighting'
+        },
+        environment: {
+          auto: `a setting appropriate to ${getDomainPromptLabel(domain)}`,
+          law_office: 'a legal office or law firm interior',
+          meeting_room: 'a modern meeting room',
+          executive_office: 'a premium executive office',
+          accounting_office: 'a professional accounting office',
+          marketing_studio: 'a creative marketing studio',
+          innovation_lab: 'a modern innovation hub',
+          research_workspace: 'a focused research workspace',
+          modern_classroom: 'a modern academic classroom',
+          library: 'a quiet library or archive setting',
+          home_office: 'a polished home office study environment'
+        },
+        device: {
+          auto: 'the most appropriate device for the scene',
+          laptop: 'a laptop used naturally',
+          desktop: 'a desktop workstation used naturally',
+          tablet: 'a tablet used naturally',
+          smartphone: 'a smartphone used naturally',
+          dual_monitor: 'a dual-monitor workstation',
+          printed_only: 'printed materials as the main interaction element',
+          none: 'no visible digital device'
+        },
+        cameraAngle: {
+          eye_level: 'camera at eye level',
+          three_quarter: 'a 3/4 frontal camera angle',
+          slight_low: 'a subtle low angle',
+          slight_high: 'a subtle high angle',
+          over_shoulder: 'an over-the-shoulder camera view'
+        },
+        composition: {
+          medium_shot: 'a medium editorial shot',
+          half_body: 'a half-body composition',
+          desk_focused: 'a desk-focused editorial composition',
+          wide_context: 'a wide contextual composition',
+          symmetrical: 'a symmetrical composition',
+          rule_of_thirds: 'a rule-of-thirds composition'
+        },
+        subject: {
+          auto: 'the most suitable subject structure for the hito',
+          professional_single: 'a single professional protagonist',
+          adult_student: 'an adult learner with a professional presence',
+          senior_executive: 'a senior executive-style professional',
+          mentor: 'a mentor or faculty-style professional',
+          duo: 'two collaborative professionals',
+          small_team: 'a small collaborative team of four to five people'
+        },
+        ageRange: {
+          auto: 'an age range that best fits the scene',
+          '18_24': '18 to 24 years old',
+          '25_34': '25 to 34 years old',
+          '35_44': '35 to 44 years old',
+          '45_54': '45 to 54 years old',
+          '55_plus': '55 years old or older'
+        },
+        tools: {
+          auto: `${profile.objectPhrases}`,
+          legal_files: 'legal files, books, printed case documents, and structured notes',
+          business_reports: 'executive reports, KPI summaries, and operational notes',
+          marketing_assets: 'briefings, campaign drafts, moodboards, and creative notes',
+          financial_docs: 'financial statements, audit papers, and tax-related printed documents',
+          research_materials: 'readings, notes, references, and highlighted study materials',
+          presentation_tools: 'presentation sheets, sticky notes, and collaborative review tools',
+          notebook_basic: 'a notebook, pen, and minimal supporting materials',
+          mixed_tools: 'a mixed set of professional and academic tools'
+        },
+        facialStyle: {
+          latino_corporate: 'Latin American corporate facial features',
+          mestizo_professional: 'mestizo professional features',
+          andean_refined: 'refined Andean features',
+          soft_executive: 'soft, confident executive facial features',
+          modern_professional: 'modern professional facial features',
+          afrolatin_professional: 'Afro-Latin professional facial features'
+        },
+        businessStyle: {
+          executive_formal: 'formal executive business attire',
+          business_casual: 'clean business casual attire',
+          smart_casual_premium: 'premium smart casual attire',
+          legal_classic: 'classic legal-style professional attire',
+          financial_sophisticated: 'sophisticated finance-oriented business attire',
+          creative_professional: 'creative professional attire with polish and confidence'
+        }
+      };
+      return (map[type] && map[type][value]) ? map[type][value] : value;
+    }
+
+    function nationalityNarrative(value) {
+      const map = {
+        bolivian: 'Bolivian',
+        peruvian: 'Peruvian',
+        argentinian: 'Argentinian',
+        chilean: 'Chilean',
+        colombian: 'Colombian',
+        ecuadorian: 'Ecuadorian',
+        brazilian: 'Brazilian',
+        paraguayan: 'Paraguayan',
+        mexican: 'Mexican',
+        latin_american: 'Latin American',
+        international: 'international'
+      };
+      return map[value] || 'Latin American';
+    }
+
+    const SUBJECT_TRANSLATION_CACHE_KEY = 'image_prompt_generator_subject_translations_v1';
+
+    const localSubjectTranslations = {
+      'derecho internacional público': 'Public International Law',
+      'derecho municipal': 'Municipal Law',
+      'gestión creativa publicitaria': 'Creative Advertising Management',
+      'estrategias digitales': 'Digital Strategies',
+      'branding estratégico': 'Strategic Branding',
+      'auditoría impositiva ii': 'Tax Audit II',
+      'business intelligence': 'Business Intelligence',
+      'gabinete de auditoría tributaria': 'Tax Audit Practice',
+      'finanzas internacionales': 'International Finance',
+      'legislación comercial internacional': 'International Commercial Legislation',
+      'metodología de la investigación': 'Research Methodology',
+      'proyecto integrador intermedio iii': 'Intermediate Integrative Project III',
+      'proyecto integrador iii': 'Integrative Project III',
+      'proyecto integrador': 'Integrative Project',
+      'auditoría': 'Audit',
+      'contabilidad': 'Accounting',
+      'administración': 'Business Administration',
+      'marketing': 'Marketing',
+      'publicidad': 'Advertising',
+      'derecho': 'Law',
+      'investigación': 'Research'
+    };
+
+    function normalizeTranslationKey(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function getTranslationCache() {
+      try {
+        return JSON.parse(localStorage.getItem(SUBJECT_TRANSLATION_CACHE_KEY) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveTranslationCache(cache) {
+      try {
+        localStorage.setItem(SUBJECT_TRANSLATION_CACHE_KEY, JSON.stringify(cache));
+      } catch {}
+    }
+
+    function fallbackTranslateSubject(value) {
+      const original = String(value || '').trim();
+      const key = normalizeTranslationKey(original);
+      if (!key) return 'Academic Subject';
+      if (localSubjectTranslations[key]) return localSubjectTranslations[key];
+
+      const phraseMap = [
+        ['metodologia de la investigacion', 'Research Methodology'],
+        ['derecho internacional publico', 'Public International Law'],
+        ['derecho municipal', 'Municipal Law'],
+        ['gestion creativa publicitaria', 'Creative Advertising Management'],
+        ['estrategias digitales', 'Digital Strategies'],
+        ['branding estrategico', 'Strategic Branding'],
+        ['auditoria impositiva', 'Tax Audit'],
+        ['gabinete de auditoria tributaria', 'Tax Audit Practice'],
+        ['finanzas internacionales', 'International Finance'],
+        ['legislacion comercial internacional', 'International Commercial Legislation'],
+        ['proyecto integrador intermedio', 'Intermediate Integrative Project'],
+        ['proyecto integrador', 'Integrative Project'],
+        ['administracion de empresas', 'Business Administration'],
+        ['ingenieria comercial', 'Commercial Engineering'],
+        ['contaduria publica', 'Public Accounting']
+      ];
+
+      let translated = key;
+      phraseMap.forEach(([es, en]) => {
+        translated = translated.replace(es, en);
+      });
+
+      const wordMap = {
+        'derecho': 'Law', 'internacional': 'International', 'publico': 'Public', 'publica': 'Public',
+        'municipal': 'Municipal', 'gestion': 'Management', 'creativa': 'Creative', 'creativo': 'Creative',
+        'publicitaria': 'Advertising', 'publicitario': 'Advertising', 'estrategias': 'Strategies',
+        'digitales': 'Digital', 'estrategico': 'Strategic', 'estrategica': 'Strategic',
+        'auditoria': 'Audit', 'impositiva': 'Tax', 'tributaria': 'Tax', 'tributario': 'Tax',
+        'gabinete': 'Practice', 'finanzas': 'Finance', 'legislacion': 'Legislation',
+        'comercial': 'Commercial', 'metodologia': 'Methodology', 'investigacion': 'Research',
+        'proyecto': 'Project', 'integrador': 'Integrative', 'intermedio': 'Intermediate',
+        'administracion': 'Administration', 'empresas': 'Business', 'contabilidad': 'Accounting',
+        'costos': 'Costs', 'presupuestos': 'Budgets', 'mercados': 'Markets', 'innovacion': 'Innovation',
+        'desarrollo': 'Development', 'organizacional': 'Organizational', 'comunicacion': 'Communication',
+        'marketing': 'Marketing', 'publicidad': 'Advertising', 'economia': 'Economics',
+        'estadistica': 'Statistics', 'matematica': 'Mathematics', 'financiera': 'Financial',
+        'financiero': 'Financial', 'empresarial': 'Business', 'etica': 'Ethics', 'profesional': 'Professional',
+        'teoria': 'Theory', 'practica': 'Practice', 'procesal': 'Procedural', 'civil': 'Civil',
+        'penal': 'Criminal', 'laboral': 'Labor', 'constitucional': 'Constitutional',
+        'societario': 'Corporate', 'aduanero': 'Customs', 'tributacion': 'Taxation',
+        'sistemas': 'Systems', 'informacion': 'Information', 'datos': 'Data', 'inteligencia': 'Intelligence',
+        'negocios': 'Business', 'marca': 'Brand', 'ventas': 'Sales', 'consumidor': 'Consumer',
+        'investigativa': 'Research', 'aplicada': 'Applied', 'aplicado': 'Applied', 'avanzada': 'Advanced',
+        'avanzado': 'Advanced', 'basica': 'Basic', 'basico': 'Basic'
+      };
+
+      if (!/[A-Z]/.test(translated)) {
+        translated = translated.split(/\s+/).map(word => wordMap[word] || word).join(' ');
+      } else {
+        translated = translated.split(/\s+/).map(word => {
+          const lower = normalizeTranslationKey(word);
+          return wordMap[lower] || word;
+        }).join(' ');
+      }
+
+      translated = translated
+        .replace(/\b(i{1,3}|iv|v|vi|vii|viii|ix|x)\b/gi, match => match.toUpperCase())
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return translated.replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    async function translateSubjectToEnglish(value) {
+      const original = String(value || '').trim();
+      if (!original) return 'Academic Subject';
+
+      const key = normalizeTranslationKey(original);
+      const cache = getTranslationCache();
+      if (cache[key]) return cache[key];
+      if (localSubjectTranslations[key]) {
+        cache[key] = localSubjectTranslations[key];
+        saveTranslationCache(cache);
+        return cache[key];
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4500);
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(original)}&langpair=es|en`;
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error('Translation service unavailable');
+        const data = await response.json();
+        const translated = String(data?.responseData?.translatedText || '').trim();
+        if (translated && translated.toLowerCase() !== original.toLowerCase()) {
+          cache[key] = translated;
+          saveTranslationCache(cache);
+          return translated;
+        }
+      } catch (error) {
+        console.warn('Online translation unavailable; using local translation fallback.', error);
+      }
+
+      const fallback = fallbackTranslateSubject(original);
+      cache[key] = fallback;
+      saveTranslationCache(cache);
+      return fallback;
+    }
+
+    function buildRenderLogicText(selectedRuleIds) {
+      const selectedLabels = renderRules
+        .filter(rule => selectedRuleIds.includes(rule.id) && rule.id !== 'avoid_unreadable_text')
+        .map(rule => rule.promptLabel.toLowerCase());
+      if (!selectedLabels.length) {
+        return 'Avoid common generation artifacts and preserve professional realism, anatomical accuracy, and visual coherence.';
+      }
+      return `Avoid common generation artifacts such as ${selectedLabels.join(', ')}, while preserving professional realism, anatomical accuracy, and visual coherence.`;
+    }
+
+    function getFacialAppearanceDescriptor(nationality) {
+      const latinAmericanSet = ['bolivian', 'peruvian', 'argentinian', 'chilean', 'colombian', 'ecuadorian', 'brazilian', 'paraguayan', 'latin_american'];
+      if (nationality === 'mexican') {
+        return 'an authentic Mexican appearance, natural facial proportions, a medium warm skin tone, nuanced features, and non-caricatured realism';
+      }
+      if (nationality === 'brazilian') {
+        return 'an authentic Brazilian appearance, natural facial proportions, realistic skin tone variation, nuanced features, and non-caricatured realism';
+      }
+      if (nationality === 'paraguayan') {
+        return 'an authentic Paraguayan appearance, natural facial proportions, a medium warm skin tone, nuanced features, and non-caricatured realism';
+      }
+      if (latinAmericanSet.includes(nationality)) {
+        return 'an authentic Latin American appearance, natural facial proportions, a medium warm skin tone, nuanced features, and non-caricatured realism';
+      }
+      return 'an authentic contemporary professional appearance, natural facial proportions, realistic skin tone variation, nuanced features, and non-caricatured realism';
+    }
+
+    function resolvePromptValues(card, values) {
+      return {
+        ...values,
+        environment: values.environment && values.environment !== 'auto' ? values.environment : (card.defaultEnvironment || 'auto'),
+        device: values.device && values.device !== 'auto' ? values.device : (card.defaultDevice || 'auto'),
+        composition: values.composition && values.composition !== 'auto' ? values.composition : (card.defaultComposition || 'auto'),
+        tools: values.tools && values.tools !== 'auto' ? values.tools : (card.defaultTools || 'auto')
+      };
+    }
+
+    function getPrimaryFocusObject(deviceValue, toolsValue) {
+      const focusMap = {
+        laptop: 'an open laptop on the desk',
+        desktop: 'a desktop monitor and workstation in front of the subject',
+        tablet: 'a tablet held or placed naturally in front of the subject',
+        smartphone: 'a smartphone in active use',
+        papers: 'printed papers, forms, or written materials on the desk',
+        notebook: 'a notebook or handwritten work materials',
+        auto: 'the main work or study object placed in front of the subject'
+      };
+      if (focusMap[deviceValue]) return focusMap[deviceValue];
+      if (toolsValue === 'research_materials') return 'research papers, notes, or academic reference materials';
+      if (toolsValue === 'presentation_tools') return 'shared presentation materials or professional work documents';
+      return 'the main work or study object placed in front of the subject';
+    }
+
+    function buildInteractionRule(card, resolvedValues, focusObject) {
+      const teamScene = card.defaultSubject === 'small_team';
+      if (teamScene) {
+        return `No participant looks at the camera. Every participant must focus naturally on ${focusObject}, on shared work materials, or on the group discussion, with believable interaction and ergonomic posture. The team must look diverse and clearly non-repetitive, with visually distinct individuals rather than similar-looking copies.`;
+      }
+      return `The protagonist must not look at the camera. The gaze, head direction, hands, and posture must align naturally with ${focusObject}.`;
+    }
+
+    async function buildPrompt(cardKey) {
+      const subjectNameOriginal = document.getElementById('subject-name').value.trim() || 'Academic subject';
+      const subjectName = await translateSubjectToEnglish(subjectNameOriginal);
+      const careerCode = document.getElementById('career').value;
+      const professionSelect = document.getElementById('profession-reference').value;
+      const nationality = document.getElementById('nationality-context').value;
+      const selectedRules = getSelectedRenderRules();
+
+      const card = HITO_CONFIGS.find(item => item.key === cardKey);
+      const { domain, profile } = inferDisciplineContext(subjectNameOriginal, careerCode);
+      const professionValue = professionSelect === 'auto' ? autoProfession(subjectNameOriginal, careerCode) : professionSelect;
+      const professionLabel = formatProfessionPrompt(professionValue);
+      const nationalityLabel = nationalityNarrative(nationality);
+      const promptCareerLabel = careerLabelPrompt(careerCode);
+      const promptSubtitle = getPromptSubtitle(card.key);
+      const domainPromptLabel = getDomainPromptLabel(domain);
+
+      const values = {};
+      Object.keys(fieldLabels).forEach(field => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        values[field] = el ? el.value : 'auto';
+      });
+      const defaults = getDefaultFieldValues(card);
+      const mergedValues = { ...defaults, ...values };
+      if (card.key === 'tar_hito5') {
+        mergedValues.gender = 'mixed_group';
+      }
+      const resolvedValues = resolvePromptValues(card, mergedValues);
+      const focusObject = getPrimaryFocusObject(resolvedValues.device, resolvedValues.tools);
+      const subjectNarrative = card.key === 'tar_hito5' ? getTeamCountNarrative(resolvedValues.groupCount) : optionToNarrative('subject', card.defaultSubject, domain);
+      const genderNarrative = optionToNarrative('gender', resolvedValues.gender, domain);
+      const ageNarrative = optionToNarrative('ageRange', resolvedValues.ageRange, domain);
+      const facialNarrative = optionToNarrative('facialStyle', resolvedValues.facialStyle, domain);
+      const businessNarrative = optionToNarrative('businessStyle', resolvedValues.businessStyle, domain);
+      const environmentNarrative = optionToNarrative('environment', resolvedValues.environment, domain);
+      const lightNarrative = optionToNarrative('light', resolvedValues.light, domain);
+      const deviceNarrative = optionToNarrative('device', resolvedValues.device, domain);
+      const cameraNarrative = optionToNarrative('cameraAngle', resolvedValues.cameraAngle, domain);
+      const compositionNarrative = optionToNarrative('composition', resolvedValues.composition, domain);
+      const toolsNarrative = optionToNarrative('tools', resolvedValues.tools, domain);
+      const interactionRule = buildInteractionRule(card, resolvedValues, focusObject);
+      const appearanceDescriptor = getFacialAppearanceDescriptor(nationality);
+
+      const appearanceParts = [
+       `hairstyle ${getAppearancePromptValue('hairStyle', resolvedValues.hairStyle)}`,
+        resolvedValues.gender === 'man' && resolvedValues.facialHair ? `facial hair ${getAppearancePromptValue('facialHair', resolvedValues.facialHair)}` : '',
+       `accessory ${getAppearancePromptValue('accessory', resolvedValues.accessory)}`,
+       `clothing type ${getAppearancePromptValue('clothingType', resolvedValues.clothingType)}`,
+       `clothing color ${getAppearancePromptValue('clothingColor', resolvedValues.clothingColor)}`
+      ].filter(Boolean).join(', ');
+
+      const sceneAction = profile && profile.phaseActions && profile.phaseActions[cardKey]
+        ? profile.phaseActions[cardKey]
+        : promptSubtitle.toLowerCase();
+
+      const promptParts = [
+       `Create a hyper-realistic academic corporate editorial image in horizontal 16:9 format for the ${card.title} block of the subject "${subjectName}" in ${promptCareerLabel}.`,
+        card.key === 'tar_hito5'
+          ? `Show ${subjectNarrative} in the age range of ${ageNarrative}, dressed in a professional and cohesive way suitable for a collaborative final integration scene.`
+          : `Show ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}, with ${facialNarrative}, ${businessNarrative}, and ${appearanceParts}.`,
+        card.key === 'tar_hito5'
+          ? `Give the group ${appearanceDescriptor}, realistic diversity, coordinated business-ready styling, and natural collaboration. Every person must look clearly different from the others, with distinct facial features, hairstyles, ages, skin tone variation, and body language. Avoid repeated faces, duplicated identities, or team members who look physically alike.`
+          : `Give the subject ${appearanceDescriptor}.`,
+       `Portray a believable ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
+       `The scene should clearly communicate ${sceneAction}.`,
+       `Set the action in ${environmentNarrative}, with ${lightNarrative}.`,
+       `Use ${focusObject} as the main point of attention, with ${deviceNarrative} as the active working setup.`,
+       `Frame the image with ${cameraNarrative} and ${compositionNarrative}.`,
+       `Include ${toolsNarrative} as supporting props integrated naturally into the scene.`,
+        interactionRule,
+       `Keep the scene natural, premium, and coherent, with accurate perspective, ergonomic body language, realistic hands, integrated props, and natural depth of field.`,
+       `Use super-real facial rendering, realistic skin microtexture, subtle asymmetry, authentic hair strands, and believable anatomy.`,
+       `Subtly evoke ${domainPromptLabel} through objects, environment, and activity.`,
+       `Do not render any readable text, titles, captions, labels, logos, brand names, watermarks, binder labels, interface text, graphic overlays, or decorative title panels anywhere in the image; screens, papers, binders, and devices may show only abstract or blurred non-readable shapes.`,
+        buildRenderLogicText(selectedRules)
+      ].filter(Boolean);
+
+      const prompt = promptParts.join(' ');
+      document.getElementById(`${cardKey}-output`).value = prompt;
+      saveState();
+      return prompt;
+    }
+
+    function updateGenderSpecificFieldVisibility(cardKey) {
+      const gender = document.getElementById(`${cardKey}-gender`)?.value || 'auto';
+      const facialHairWrapper = document.querySelector(`[data-field-wrapper="${cardKey}-facialHair"]`);
+      if (facialHairWrapper) facialHairWrapper.classList.toggle('hidden', gender !== 'man');
+    }
+
+    function updateColorPreview(cardKey) {
+      const select = document.getElementById(`${cardKey}-clothingColor`);
+      const swatch = document.getElementById(`${cardKey}-clothingColor-preview`);
+      if (!select || !swatch) return;
+      const color = professionalClothingColors.find(c => c.val === select.value);
+      swatch.style.background = color?.hex || '#cbd5e1';
+      swatch.title = color?.display || select.value;
+    }
+
+    function createColorPreviewControl(cardKey, defaultValue) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'color-preview-control';
+      const swatch = document.createElement('span');
+      swatch.id = `${cardKey}-clothingColor-preview`;
+      swatch.className = 'color-preview-swatch';
+      const select = document.createElement('select');
+      select.id = `${cardKey}-clothingColor`;
+      select.className = 'form-select';
+      populateSelectOptions(select, getDynamicFieldOptions('clothingColor', cardKey), defaultValue);
+      select.addEventListener('change', () => { updateColorPreview(cardKey); saveState(); });
+      wrapper.appendChild(swatch);
+      wrapper.appendChild(select);
+      setTimeout(() => updateColorPreview(cardKey), 0);
+      return wrapper;
+    }
+
+    function createSelect(field, cardKey, defaultValue) {
+      const select = document.createElement('select');
+      select.id = `${cardKey}-${field}`;
+      select.className = 'form-select';
+      const isDynamicAppearanceField = ['hairStyle', 'facialHair', 'accessory', 'clothingType', 'clothingColor'].includes(field);
+      const options = isDynamicAppearanceField
+        ? getDynamicFieldOptions(field, cardKey)
+        : (optionSets[field] || []).map(([value, label]) => ({ val: value, display: label }));
+      populateSelectOptions(select, options, defaultValue);
+      select.addEventListener('change', () => {
+        if (field === 'gender') {
+          const preserved = {
+            hairStyle: document.getElementById(`${cardKey}-hairStyle`)?.value,
+            facialHair: document.getElementById(`${cardKey}-facialHair`)?.value,
+            accessory: document.getElementById(`${cardKey}-accessory`)?.value,
+            clothingType: document.getElementById(`${cardKey}-clothingType`)?.value,
+            clothingColor: document.getElementById(`${cardKey}-clothingColor`)?.value
+          };
+          refreshAppearanceFields(cardKey, preserved);
+          updateGenderSpecificFieldVisibility(cardKey);
+          updateColorPreview(cardKey);
+        } else if (field === 'clothingType') {
+          refreshAppearanceFields(cardKey, {
+            hairStyle: document.getElementById(`${cardKey}-hairStyle`)?.value,
+            facialHair: document.getElementById(`${cardKey}-facialHair`)?.value,
+            accessory: document.getElementById(`${cardKey}-accessory`)?.value,
+            clothingType: select.value,
+            clothingColor: document.getElementById(`${cardKey}-clothingColor`)?.value
+          });
+          updateColorPreview(cardKey);
+        }
+        saveState();
+      });
+      return select;
+    }
+
+
+    function getVisibleFieldsForCard(cardKey) {
+      if (cardKey === 'tar_hito5' || cardKey === 'banner_h5') {
+        return ['groupCount', 'ageRange', 'light', 'cameraAngle', 'tools'];
+      }
+      return Object.keys(fieldLabels).filter(field => field !== 'groupCount');
+    }
+
+    function getTeamCountNarrative(value) {
+      const map = {
+        '2': 'a collaborative pair of two professionals',
+        '3': 'a team of three professionals',
+        '4': 'a team of four professionals',
+        '5': 'a team of five professionals',
+        '6': 'a group of six or more professionals'
+      };
+      return map[value] || 'a small collaborative team';
+    }
+
+    function buildPromptCards() {
+
+      const container = document.getElementById('prompt-cards');
+      container.innerHTML = '';
+      HITO_CONFIGS.forEach(card => {
+        const article = document.createElement('article');
+        article.className = 'prompt-card p-5 md:p-6';
+        article.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
+            <div>
+              <div class="badge mb-3"><i class="fa-solid fa-layer-group"></i>${card.title}</div>
+              <h3 class="text-xl md:text-2xl font-extrabold text-white">${card.phase}</h3>
+              <p class="helper mt-2 max-w-2xl">${card.subtitle}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5" id="${card.key}-fields"></div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-action="generate-one" data-card="${card.key}"><i class="fa-solid fa-sparkles"></i>Generar</button>
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-action="copy-one" data-card="${card.key}"><i class="fa-solid fa-copy"></i>Copiar</button>
+            <button class="secondary-btn danger-btn !py-2 !px-3 text-sm" data-action="reset-one" data-card="${card.key}"><i class="fa-solid fa-rotate-left"></i>Restablecer</button>
+          </div>
+          <div>
+            <label class="label" for="${card.key}-output">Prompt generado</label>
+            <textarea id="${card.key}-output" class="form-textarea mono" placeholder="Aquí aparecerá el prompt de ${card.title}..."></textarea>
+          </div>
+       `;
+        container.appendChild(article);
+
+        const fieldsGrid = article.querySelector(`#${card.key}-fields`);
+        const defaults = getDefaultFieldValues(card);
+
+        getVisibleFieldsForCard(card.key).forEach(field => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'glass-soft rounded-2xl p-4';
+          wrapper.dataset.fieldWrapper = `${card.key}-${field}`;
+          const label = document.createElement('label');
+          label.className = 'label';
+          label.textContent = fieldLabels[field];
+          label.setAttribute('for', `${card.key}-${field}`);
+          wrapper.appendChild(label);
+          wrapper.appendChild(field === 'clothingColor' ? createColorPreviewControl(card.key, defaults[field]) : createSelect(field, card.key, defaults[field]));
+          fieldsGrid.appendChild(wrapper);
+        });
+        if (card.key !== 'tar_hito5') {
+          refreshAppearanceFields(card.key, defaults);
+          updateGenderSpecificFieldVisibility(card.key);
+          updateColorPreview(card.key);
+        }
+      });
+    }
+
+
+    function buildBannerProfessionSelect() {
+      const select = document.getElementById('banner-profession-reference');
+      if (!select) return;
+      select.innerHTML = '';
+      professionOptions.common.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        select.appendChild(option);
+      });
+    }
+
+    function getBannerGeneralValues() {
+      return {
+        subjectNameOriginal: document.getElementById('banner-subject-name')?.value.trim() || document.getElementById('subject-name')?.value.trim() || 'Academic subject',
+        careerCode: document.getElementById('banner-career')?.value || document.getElementById('career')?.value || 'OTHER',
+        professionSelect: document.getElementById('banner-profession-reference')?.value || 'auto',
+        nationality: document.getElementById('banner-nationality-context')?.value || document.getElementById('nationality-context')?.value || 'latin_american'
+      };
+    }
+
+    function getBannerSceneAction(card, profile) {
+      const actionMap = {
+        banner_h1: profile.phaseActions.tar_hito1,
+        banner_h2: profile.phaseActions.tar_hito2,
+        banner_h3: profile.phaseActions.tar_hito3,
+        banner_h4: profile.phaseActions.tar_hito4,
+        banner_h5: profile.phaseActions.tar_hito5,
+        aes_311_com_docente: 'a faculty mentor communicating guidance and academic support through a professional digital workspace',
+        banner_aplic_s01: 'applying the central concepts of the subject to a realistic professional task',
+        banner_plan_s01: 'planning, organizing, and structuring an academic or professional activity',
+        banner_gam_s01: 'interacting with an engaging learning activity through a digital device',
+        banner_afi_s01: 'reinforcing knowledge through focused review and guided practice',
+        banner_cont_s01: 'studying the core academic content of the subject in a focused professional setting',
+        banner_reflex_s01: 'reflecting carefully on a meaningful question related to the subject',
+        banner_proyecto_s01: 'developing a practical project connected to the subject',
+        banner_foro_s01: 'participating thoughtfully in an online academic discussion forum'
+      };
+      return actionMap[card.key] || 'working on a meaningful academic activity related to the subject';
+    }
+
+    async function buildBannerPrompt(cardKey) {
+      const card = BANNER_CONFIGS.find(item => item.key === cardKey);
+      if (!card) return '';
+      const general = getBannerGeneralValues();
+      const subjectName = await translateSubjectToEnglish(general.subjectNameOriginal);
+      const { domain, profile } = inferDisciplineContext(general.subjectNameOriginal, general.careerCode);
+      const professionValue = general.professionSelect === 'auto' ? autoProfession(general.subjectNameOriginal, general.careerCode) : general.professionSelect;
+      const professionLabel = formatProfessionPrompt(professionValue);
+      const nationalityLabel = nationalityNarrative(general.nationality);
+      const promptCareerLabel = careerLabelPrompt(general.careerCode);
+      const appearanceDescriptor = getFacialAppearanceDescriptor(general.nationality);
+      const selectedRules = getSelectedRenderRules();
+
+      const defaults = getDefaultFieldValues(card);
+      const values = {};
+      Object.keys(fieldLabels).forEach(field => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        values[field] = el ? el.value : defaults[field];
+      });
+      const mergedValues = { ...defaults, ...values };
+      if (card.key === 'banner_h5') mergedValues.gender = 'mixed_group';
+      const resolved = resolvePromptValues(card, mergedValues);
+      const focusObject = getPrimaryFocusObject(resolved.device, resolved.tools);
+      const teamScene = card.key === 'banner_h5';
+      const subjectNarrative = teamScene ? getTeamCountNarrative(resolved.groupCount) : optionToNarrative('subject', card.defaultSubject, domain);
+      const genderNarrative = optionToNarrative('gender', resolved.gender, domain);
+      const ageNarrative = optionToNarrative('ageRange', resolved.ageRange, domain);
+      const environmentNarrative = optionToNarrative('environment', resolved.environment, domain);
+      const lightNarrative = optionToNarrative('light', resolved.light, domain);
+      const cameraNarrative = optionToNarrative('cameraAngle', resolved.cameraAngle, domain);
+      const compositionNarrative = optionToNarrative('composition', resolved.composition, domain);
+      const toolsNarrative = optionToNarrative('tools', resolved.tools, domain);
+      const deviceNarrative = optionToNarrative('device', resolved.device, domain);
+
+      const appearanceParts = teamScene ? '' : [
+       `hairstyle ${getAppearancePromptValue('hairStyle', resolved.hairStyle)}`,
+        resolved.gender === 'man' && resolved.facialHair ? `facial hair ${getAppearancePromptValue('facialHair', resolved.facialHair)}` : '',
+       `accessory ${getAppearancePromptValue('accessory', resolved.accessory)}`,
+       `clothing type ${getAppearancePromptValue('clothingType', resolved.clothingType)}`,
+       `clothing color ${getAppearancePromptValue('clothingColor', resolved.clothingColor)}`
+      ].filter(Boolean).join(', ');
+
+      const promptParts = [
+       `Subject: "${subjectName}". Faculty / career: ${promptCareerLabel}.`,
+        teamScene
+          ? `Show ${subjectNarrative} in the professional age range of ${ageNarrative}, collaborating naturally in a final integration activity. Every person must look physically distinct, with different facial structures, hairstyles, skin tone variation, and body language.`
+          : `Show ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}, with ${appearanceDescriptor} and ${appearanceParts}.`,
+       `Portray a believable ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
+       `The scene should communicate ${getBannerSceneAction(card, profile)}.`,
+       `Set the action in ${environmentNarrative}, with ${lightNarrative}.`,
+       `Use ${focusObject} as the main point of attention, supported by ${deviceNarrative} and ${toolsNarrative}.`,
+       `Use ${cameraNarrative} and ${compositionNarrative}, cropped naturally for a thin panoramic banner.`,
+        teamScene
+          ? `No participant looks at the camera. All participants focus on shared materials, screens, or the group discussion. Avoid repeated faces or similar-looking people.`
+          : `The subject must not look at the camera. The gaze, head direction, hands, and posture must align naturally with the active work object.`,
+       `Keep the left side free of people, objects, titles, logos, labels, and readable text, but preserve subtle environmental depth, soft tonal continuity, and realistic background context. `,
+       `Use super-real facial rendering, realistic skin microtexture, subtle asymmetry, authentic hair strands, accurate anatomy, realistic hands, coherent lighting, and natural depth of field.`,
+       `Do not render readable text, watermarks, logos, brand names, labels, interface text, decorative panels, graphic overlays, white halos, white fog effects, or washed-out glow anywhere in the image.`,
+        buildRenderLogicText(selectedRules)
+      ];
+
+      const prompt = promptParts.filter(Boolean).join(' ');
+      const output = document.getElementById(`${cardKey}-output`);
+      if (output) output.value = prompt;
+      saveState();
+      return prompt;
+    }
+
+    function buildBannerCards() {
+      const left = document.getElementById('banner-left-cards');
+      const right = document.getElementById('banner-right-cards');
+      if (!left || !right) return;
+      left.innerHTML = '';
+      right.innerHTML = '';
+
+      BANNER_CONFIGS.forEach(card => {
+        const article = document.createElement('article');
+        article.className = 'prompt-card p-5 md:p-6';
+        article.innerHTML = `
+          <div class="mb-5">
+            <div class="badge mb-3"><i class="fa-solid fa-panorama"></i>${card.title}</div>
+            <h3 class="text-xl font-extrabold text-white">${card.phase}</h3>
+            <p class="helper mt-2">${card.subtitle}</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5" id="${card.key}-fields"></div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-banner-action="generate-one" data-banner-card="${card.key}"><i class="fa-solid fa-sparkles"></i>Generar</button>
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-banner-action="copy-one" data-banner-card="${card.key}"><i class="fa-solid fa-copy"></i>Copiar</button>
+            <button class="secondary-btn danger-btn !py-2 !px-3 text-sm" data-banner-action="reset-one" data-banner-card="${card.key}"><i class="fa-solid fa-rotate-left"></i>Restablecer</button>
+          </div>
+          <div>
+            <label class="label" for="${card.key}-output">Prompt generado</label>
+            <textarea id="${card.key}-output" class="form-textarea mono" placeholder="Aquí aparecerá el prompt de ${card.title}..."></textarea>
+          </div>
+       `;
+        (card.side === 'left' ? left : right).appendChild(article);
+
+        const fieldsGrid = article.querySelector(`#${card.key}-fields`);
+        const defaults = getDefaultFieldValues(card);
+        getVisibleFieldsForCard(card.key).forEach(field => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'glass-soft rounded-2xl p-4';
+          wrapper.dataset.fieldWrapper = `${card.key}-${field}`;
+          const label = document.createElement('label');
+          label.className = 'label';
+          label.textContent = fieldLabels[field];
+          label.setAttribute('for', `${card.key}-${field}`);
+          wrapper.appendChild(label);
+          wrapper.appendChild(field === 'clothingColor' ? createColorPreviewControl(card.key, defaults[field]) : createSelect(field, card.key, defaults[field]));
+          fieldsGrid.appendChild(wrapper);
+        });
+        if (card.key !== 'banner_h5') {
+          refreshAppearanceFields(card.key, defaults);
+          updateGenderSpecificFieldVisibility(card.key);
+          updateColorPreview(card.key);
+        }
+      });
+    }
+
+    async function generateAllBannerPrompts() {
+      await Promise.all(BANNER_CONFIGS.map(card => buildBannerPrompt(card.key)));
+      toast('Se generaron los 14 prompts de banners completamente en inglés.');
+    }
+
+    async function copyAllBannerPrompts() {
+      const text = BANNER_CONFIGS.map(card => `${card.title.toUpperCase()}\n${document.getElementById(`${card.key}-output`)?.value.trim() || ''}`)
+        .join('\n\n------------------------------\n\n');
+      if (!text.replace(/[-\s]/g, '')) {
+        toast('Primero genera los prompts de banners.', 'warning');
+        return;
+      }
+      await copyText(text);
+      toast('Todos los prompts de banners fueron copiados.');
+    }
+
+    function resetBannerCard(cardKey) {
+      const card = BANNER_CONFIGS.find(item => item.key === cardKey);
+      if (!card) return;
+      const defaults = getDefaultFieldValues(card);
+      Object.entries(defaults).forEach(([field, value]) => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        if (el) el.value = value;
+      });
+      if (card.key !== 'banner_h5') {
+        refreshAppearanceFields(cardKey, defaults);
+        updateGenderSpecificFieldVisibility(cardKey);
+        updateColorPreview(cardKey);
+      }
+      const output = document.getElementById(`${cardKey}-output`);
+      if (output) output.value = '';
+      saveState();
+    }
+
+    function syncBannerGeneralFromHitos() {
+      document.getElementById('banner-subject-name').value = document.getElementById('subject-name').value;
+      document.getElementById('banner-career').value = document.getElementById('career').value;
+      document.getElementById('banner-profession-reference').value = document.getElementById('profession-reference').value;
+      document.getElementById('banner-nationality-context').value = document.getElementById('nationality-context').value;
+      saveState();
+      toast('Configuración general copiada desde Generador Hitos.');
+    }
+
+    function buildProfessionSelect() {
+      const select = document.getElementById('profession-reference');
+      select.innerHTML = '';
+      professionOptions.common.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        select.appendChild(option);
+      });
+    }
+
+    function buildRenderRules() {
+      const container = document.getElementById('render-rules-container');
+      container.innerHTML = '';
+      renderRules.forEach(rule => {
+        const label = document.createElement('label');
+        label.className = 'chip';
+        label.innerHTML = `<input type="checkbox" data-rule-id="${rule.id}" checked> <span>${rule.label}</span>`;
+        label.querySelector('input').addEventListener('change', saveState);
+        container.appendChild(label);
+      });
+    }
+
+    function getSelectedRenderRules() {
+      return Array.from(document.querySelectorAll('#render-rules-container input[type="checkbox"]:checked')).map(input => input.dataset.ruleId);
+    }
+
+    async function generateAllPrompts(showToast = true) {
+      const prompts = await Promise.all(HITO_CONFIGS.map(card => buildPrompt(card.key)));
+      if (showToast) toast('Se generaron los 6 prompts completamente en inglés.');
+      return prompts;
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        textarea.remove();
+        return true;
+      }
+    }
+
+    async function copyAllPrompts() {
+      const allText = HITO_CONFIGS.map(card => {
+        const text = document.getElementById(`${card.key}-output`).value.trim();
+        return `${card.title.toUpperCase()}\n${text}`;
+      }).join('\n\n------------------------------\n\n');
+
+      if (!allText.replace(/[-\s]/g, '')) {
+        toast('Primero genera los prompts.', 'warning');
+        return;
+      }
+      await copyText(allText);
+      toast('Todos los prompts fueron copiados.');
+    }
+
+    async function copyOnePrompt(cardKey) {
+      const text = document.getElementById(`${cardKey}-output`).value.trim();
+      if (!text) {
+        toast('Ese prompt todavía está vacío.', 'warning');
+        return;
+      }
+      await copyText(text);
+      toast(`Prompt de ${cardKey} copiado.`);
+    }
+
+    function resetCard(cardKey, silent = false) {
+      const card = HITO_CONFIGS.find(item => item.key === cardKey);
+      if (!card) return;
+
+      const defaults = getDefaultFieldValues(card);
+      Object.entries(defaults).forEach(([field, value]) => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        if (el) el.value = value;
+      });
+      refreshAppearanceFields(cardKey, defaults);
+      document.getElementById(`${cardKey}-output`).value = '';
+      saveState();
+      if (!silent) toast(`Tarjeta ${cardKey} restablecida.`);
+    }
+
+    function autofillSuggestions() {
+      const subjectName = document.getElementById('subject-name').value.trim();
+      const careerCode = document.getElementById('career').value;
+      const { domain, profile } = inferDisciplineContext(subjectName, careerCode);
+
+      if (document.getElementById('profession-reference').value === 'auto') {
+        document.getElementById('profession-reference').value = 'auto';
+      }
+
+      HITO_CONFIGS.forEach(card => {
+        const envEl = document.getElementById(`${card.key}-environment`);
+        const devEl = document.getElementById(`${card.key}-device`);
+        const toolEl = document.getElementById(`${card.key}-tools`);
+        const styleEl = document.getElementById(`${card.key}-businessStyle`);
+
+        if (envEl && envEl.value === 'auto') envEl.value = profile.environments[0] || 'executive_office';
+        if (devEl && devEl.value === 'auto') devEl.value = profile.devices[0] || 'laptop';
+        if (toolEl && toolEl.value === 'auto') toolEl.value = profile.tools[0] || 'notebook_basic';
+
+        if (styleEl && styleEl.value === 'smart_casual_premium') {
+          if (domain === 'law') styleEl.value = 'legal_classic';
+          else if (domain === 'marketing') styleEl.value = 'creative_professional';
+          else if (domain === 'accounting' || domain === 'business') styleEl.value = 'financial_sophisticated';
+          else if (domain === 'management') styleEl.value = 'executive_formal';
+        }
+      });
+
+      updateDetectedContext();
+      saveState();
+      toast('Se aplicaron sugerencias automáticas.');
+    }
+
+    function updateDetectedContext() {
+      const subjectName = document.getElementById('subject-name').value.trim();
+      const careerCode = document.getElementById('career').value;
+      const { domain, profile } = inferDisciplineContext(subjectName, careerCode);
+      const domainEl = document.getElementById('detected-domain');
+      const summaryEl = document.getElementById('detected-summary');
+      domainEl.textContent = `${profile.label} · ${careerLabel(careerCode)}`;
+      summaryEl.textContent = profile.autoSummary;
+
+      if (document.getElementById('profession-reference').value === 'auto') {
+        const autoValue = autoProfession(subjectName, careerCode);
+        document.getElementById('profession-reference').value = 'auto';
+        document.getElementById('profession-reference').dataset.autoResolved = autoValue;
+      }
+    }
+
+    function saveState() {
+      const state = {
+        subjectName: document.getElementById('subject-name').value,
+        career: document.getElementById('career').value,
+        professionReference: document.getElementById('profession-reference').value,
+        nationalityContext: document.getElementById('nationality-context').value,
+        bannerSubjectName: document.getElementById('banner-subject-name')?.value || '',
+        bannerCareer: document.getElementById('banner-career')?.value || 'DER',
+        bannerProfessionReference: document.getElementById('banner-profession-reference')?.value || 'auto',
+        bannerNationalityContext: document.getElementById('banner-nationality-context')?.value || 'bolivian',
+        renderRules: getSelectedRenderRules(),
+        cards: {},
+        bannerCards: {}
+      };
+      HITO_CONFIGS.forEach(card => {
+        state.cards[card.key] = {};
+        Object.keys(fieldLabels).forEach(field => {
+          const el = document.getElementById(`${card.key}-${field}`);
+          if (el) state.cards[card.key][field] = el.value;
+        });
+        state.cards[card.key].output = document.getElementById(`${card.key}-output`).value;
+      });
+      BANNER_CONFIGS.forEach(card => {
+        state.bannerCards[card.key] = {};
+        Object.keys(fieldLabels).forEach(field => {
+          const el = document.getElementById(`${card.key}-${field}`);
+          if (el) state.bannerCards[card.key][field] = el.value;
+        });
+        state.bannerCards[card.key].output = document.getElementById(`${card.key}-output`)?.value || '';
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const state = JSON.parse(raw);
+        if (state.subjectName !== undefined) document.getElementById('subject-name').value = state.subjectName;
+        if (state.career) document.getElementById('career').value = state.career;
+        if (state.professionReference) document.getElementById('profession-reference').value = state.professionReference;
+        if (state.nationalityContext) document.getElementById('nationality-context').value = state.nationalityContext;
+        if (state.bannerSubjectName !== undefined) document.getElementById('banner-subject-name').value = state.bannerSubjectName;
+        if (state.bannerCareer) document.getElementById('banner-career').value = state.bannerCareer;
+        if (state.bannerProfessionReference) document.getElementById('banner-profession-reference').value = state.bannerProfessionReference;
+        if (state.bannerNationalityContext) document.getElementById('banner-nationality-context').value = state.bannerNationalityContext;
+        if (Array.isArray(state.renderRules)) {
+          document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => {
+            input.checked = state.renderRules.includes(input.dataset.ruleId);
+          });
+        }
+        if (state.cards) {
+          HITO_CONFIGS.forEach(card => {
+            const cardState = state.cards[card.key];
+            if (!cardState) return;
+            const defaults = getDefaultFieldValues(card);
+            Object.keys(fieldLabels).forEach(field => {
+              if (cardState[field] !== undefined) {
+                const el = document.getElementById(`${card.key}-${field}`);
+                if (el) el.value = cardState[field];
+              } else if (defaults[field] !== undefined) {
+                const el = document.getElementById(`${card.key}-${field}`);
+                if (el) el.value = defaults[field];
+              }
+            });
+            refreshAppearanceFields(card.key, { ...defaults, ...cardState });
+            updateGenderSpecificFieldVisibility(card.key);
+            updateColorPreview(card.key);
+            if (cardState.output !== undefined) {
+              const outputEl = document.getElementById(`${card.key}-output`);
+              if (outputEl) outputEl.value = cardState.output;
+            }
+          });
+        }
+        if (state.bannerCards) {
+          BANNER_CONFIGS.forEach(card => {
+            const cardState = state.bannerCards[card.key];
+            if (!cardState) return;
+            const defaults = getDefaultFieldValues(card);
+            Object.keys(fieldLabels).forEach(field => {
+              const el = document.getElementById(`${card.key}-${field}`);
+              if (el) el.value = cardState[field] !== undefined ? cardState[field] : defaults[field];
+            });
+            if (card.key !== 'banner_h5') {
+              refreshAppearanceFields(card.key, { ...defaults, ...cardState });
+              updateGenderSpecificFieldVisibility(card.key);
+              updateColorPreview(card.key);
+            }
+            const output = document.getElementById(`${card.key}-output`);
+            if (output && cardState.output !== undefined) output.value = cardState.output;
+          });
+        }
+      } catch (err) {
+        console.error('No se pudo cargar el estado', err);
+      }
+    }
+
+    function resetApp() {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('subject-name').value = '';
+      document.getElementById('career').value = 'DER';
+      document.getElementById('profession-reference').value = 'auto';
+      document.getElementById('nationality-context').value = 'bolivian';
+      document.getElementById('banner-subject-name').value = '';
+      document.getElementById('banner-career').value = 'DER';
+      document.getElementById('banner-profession-reference').value = 'auto';
+      document.getElementById('banner-nationality-context').value = 'bolivian';
+      document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => input.checked = true);
+      HITO_CONFIGS.forEach(card => resetCard(card.key, true));
+      BANNER_CONFIGS.forEach(card => resetBannerCard(card.key));
+      updateDetectedContext();
+      toast('Aplicación restablecida.');
+    }
+
+    function toast(message, type = 'success') {
+      const container = document.getElementById('app-toast-container');
+      const div = document.createElement('div');
+      div.className = 'toast pointer-events-auto';
+      const icon = type === 'warning' ? 'triangle-exclamation' : type === 'error' ? 'circle-xmark' : 'circle-check';
+      div.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl ${type === 'warning' ? 'bg-amber-400/10 text-amber-300 border border-amber-400/20' : type === 'error' ? 'bg-rose-400/10 text-rose-300 border border-rose-400/20' : 'bg-emerald-400/10 text-emerald-300 border border-emerald-400/20'} flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-${icon}"></i>
+          </div>
+          <div class="text-sm leading-relaxed">${message}</div>
+        </div>
+     `;
+      container.appendChild(div);
+      setTimeout(() => {
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(-6px)';
+        div.style.transition = '.2s ease';
+        setTimeout(() => div.remove(), 220);
+      }, 2400);
+    }
+
+    function attachEvents() {
+      document.querySelectorAll('[data-page-target]').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-page-target]').forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById(button.dataset.pageTarget).classList.add('active');
+        });
+      });
+
+      ['subject-name', 'career', 'profession-reference', 'nationality-context'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => { updateDetectedContext(); saveState(); });
+        document.getElementById(id).addEventListener('change', () => { updateDetectedContext(); saveState(); });
+      });
+
+      document.getElementById('generate-all-btn').addEventListener('click', () => generateAllPrompts(true));
+      const generateAllBtnTop = document.getElementById('generate-all-btn-top');
+      if (generateAllBtnTop) generateAllBtnTop.addEventListener('click', () => generateAllPrompts(true));
+      document.getElementById('copy-all-btn').addEventListener('click', copyAllPrompts);
+      const copyAllBtnTop = document.getElementById('copy-all-btn-top');
+      if (copyAllBtnTop) copyAllBtnTop.addEventListener('click', copyAllPrompts);
+      document.getElementById('autofill-btn').addEventListener('click', autofillSuggestions);
+      document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+      const resetAppBtnTop = document.getElementById('reset-app-btn-top');
+      if (resetAppBtnTop) resetAppBtnTop.addEventListener('click', resetApp);
+
+      document.getElementById('select-all-render-rules').addEventListener('click', () => {
+        document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => input.checked = true);
+        saveState();
+      });
+      document.getElementById('clear-render-rules').addEventListener('click', () => {
+        document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => input.checked = false);
+        saveState();
+      });
+
+      document.getElementById('prompt-cards').addEventListener('click', async event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const cardKey = button.dataset.card;
+        const action = button.dataset.action;
+        if (action === 'generate-one') {
+          await buildPrompt(cardKey);
+          toast(`Prompt de ${cardKey} generado completamente en inglés.`);
+        } else if (action === 'copy-one') {
+          copyOnePrompt(cardKey);
+        } else if (action === 'reset-one') {
+          resetCard(cardKey);
+        }
+      });
+
+      document.querySelectorAll('#prompt-cards select, #prompt-cards textarea').forEach(el => {
+        el.addEventListener('change', saveState);
+        el.addEventListener('input', saveState);
+      });
+
+      ['banner-subject-name', 'banner-career', 'banner-profession-reference', 'banner-nationality-context'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', saveState);
+        el.addEventListener('change', saveState);
+      });
+
+      document.getElementById('generate-all-banners-btn')?.addEventListener('click', generateAllBannerPrompts);
+      document.getElementById('copy-all-banners-btn')?.addEventListener('click', copyAllBannerPrompts);
+      document.getElementById('sync-banner-config-btn')?.addEventListener('click', syncBannerGeneralFromHitos);
+
+      const bannerArea = document.getElementById('page-2');
+      bannerArea?.addEventListener('click', async event => {
+        const button = event.target.closest('button[data-banner-action]');
+        if (!button) return;
+        const cardKey = button.dataset.bannerCard;
+        const action = button.dataset.bannerAction;
+        if (action === 'generate-one') {
+          await buildBannerPrompt(cardKey);
+          toast(`Prompt de ${cardKey} generado completamente en inglés.`);
+        } else if (action === 'copy-one') {
+          const value = document.getElementById(`${cardKey}-output`)?.value.trim();
+          if (!value) return toast('Ese prompt todavía está vacío.', 'warning');
+          await copyText(value);
+          toast(`Prompt de ${cardKey} copiado.`);
+        } else if (action === 'reset-one') {
+          resetBannerCard(cardKey);
+          toast(`Tarjeta ${cardKey} restablecida.`);
+        }
+      });
+
+      document.querySelectorAll('#page-2 select, #page-2 textarea').forEach(el => {
+        el.addEventListener('change', saveState);
+        el.addEventListener('input', saveState);
+      });
+    }
+    function loadTotalGenerator() { return; }
+
+    function applyTheme(theme) {
+      const finalTheme = theme === 'light' ? 'light' : 'dark';
+      document.body.classList.toggle('light-theme', finalTheme === 'light');
+      document.documentElement.classList.toggle('dark', finalTheme === 'dark');
+      const label = document.getElementById('theme-toggle-label');
+      const icon = document.getElementById('theme-toggle-icon');
+      if (label) label.textContent = finalTheme === 'light' ? 'Modo oscuro' : 'Modo claro';
+      if (icon) {
+        icon.className = finalTheme === 'light' ? 'fa-regular fa-moon' : 'fa-regular fa-sun';
+      }
+      localStorage.setItem(THEME_KEY, finalTheme);
+    }
+
+    function toggleTheme() {
+      const current = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+      applyTheme(current === 'light' ? 'dark' : 'light');
+    }
+
+    function initTheme() {
+      const storedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(storedTheme);
+    }
+
+    function init() {
+      initTheme();
+      buildProfessionSelect();
+      buildBannerProfessionSelect();
+      buildRenderRules();
+      buildPromptCards();
+      buildBannerCards();
+      loadState();
+      attachEvents();
+      updateDetectedContext();
+      saveState();
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

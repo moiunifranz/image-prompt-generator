@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image prompt generator v1.0.16</title>
+  <title>Image prompt generator v1.0.20</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%2307111f%27/%3E%3Cpath d=%27M16 22h32v6H35v22h-6V28H16z%27 fill=%27%2338bdf8%27/%3E%3Cpath d=%27M46 16l2.5 5.5L54 24l-5.5 2.5L46 32l-2.5-5.5L38 24l5.5-2.5z%27 fill=%27%23818cf8%27/%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -321,7 +321,7 @@
         <div>
           <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-3 uppercase">
             <span>IMAGE PROMPT GENERATOR</span>
-            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.16</span>
+            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.20</span>
           </h1>
           <p class="mt-3 max-w-4xl text-slate-300/90 leading-relaxed text-sm md:text-base">
             Generador de prompts académicos para Unifranz Online con personalización general e individual y lógica visual segura.
@@ -362,6 +362,7 @@
               <label class="label" for="career">Carrera</label>
               <select id="career" class="form-select">
                 <option value="DER">Derecho (DER)</option>
+                <option value="PSI">Psicología (PSI)</option>
                 <option value="ICO">Ingeniería Comercial (ICO)</option>
                 <option value="ADM">Administración (ADM)</option>
                 <option value="PYM">Publicidad y Marketing (PYM)</option>
@@ -453,6 +454,7 @@
               <label class="label" for="banner-career">Carrera</label>
               <select id="banner-career" class="form-select">
                 <option value="DER">Derecho (DER)</option>
+                <option value="PSI">Psicología (PSI)</option>
                 <option value="ICO">Ingeniería Comercial (ICO)</option>
                 <option value="ADM">Administración (ADM)</option>
                 <option value="PYM">Publicidad y Marketing (PYM)</option>
@@ -509,7 +511,7 @@
   </div>
 
   <script>
-    const APP_VERSION = 'v1.0.16';
+    const APP_VERSION = 'v1.0.20';
     const STORAGE_KEY = 'image_prompt_generator_v1_0_15';
     const THEME_KEY = 'image_prompt_generator_theme_v1_0_14';
 
@@ -823,6 +825,7 @@
     ];
 
     const careerData = {
+      PSI: { label: 'Psicología', defaultProfession: 'clinical_psychologist', defaultDomain: 'psychology' },
       DER: { label: 'Derecho', defaultProfession: 'legal_advisor', defaultDomain: 'law' },
       ICO: { label: 'Ingeniería Comercial', defaultProfession: 'business_analyst', defaultDomain: 'business' },
       ADM: { label: 'Administración', defaultProfession: 'operations_manager', defaultDomain: 'management' },
@@ -833,6 +836,23 @@
     };
 
     const domainProfiles = {
+      psychology: {
+        label: 'Psicología / comportamiento humano',
+        autoSummary: 'Entornos psicológicos enfocados en evaluación, comportamiento humano, procesos cognitivos, emociones, desarrollo personal, investigación aplicada y análisis de casos.',
+        professionFallback: 'clinical_psychologist',
+        environments: ['psychology_consulting', 'psychology_assessment', 'research_lab', 'educational_space', 'organizational_office'],
+        devices: ['laptop', 'tablet', 'printed_only'],
+        tools: ['notebook_basic', 'research_materials', 'presentation_tools'],
+        phaseActions: {
+          header: 'introducing the subject through a psychology professional analyzing human behavior and applied psychological concepts',
+          tar_hito1: 'performing an online psychological evaluation activity, reviewing concepts and reinforcing foundational knowledge',
+          tar_hito2: 'applying psychological concepts to analyze human behavior, cases, or professional situations',
+          tar_hito3: 'researching psychological theories, assessment methods, cognitive processes, or behavioral studies in an interactive learning process',
+          tar_hito4: 'reviewing performance, interpreting findings, and improving psychological analysis or intervention proposals',
+          tar_hito5: 'collaborating in a final psychology presentation with a diverse team integrating research findings and conclusions'
+        },
+        objectPhrases: 'psychological assessment materials, notebooks, research documents, interview notes, and academic resources'
+      },
       law: {
         label: 'Jurídico / legal',
         autoSummary: 'Entornos legales, documentación formal, revisión de normas, contratos, doctrina y análisis de casos.',
@@ -1190,6 +1210,7 @@
       const subject = (subjectName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
       const keywordSets = {
+        psychology: ['psicologia', 'psicologico', 'psicologica', 'psicopatologia', 'conducta', 'cognitivo', 'emocional', 'personalidad', 'evaluacion psicologica', 'salud mental'],
         research: ['metodologia', 'investigacion', 'tesis', 'metodo', 'metodos', 'research'],
         marketing: ['branding', 'publicidad', 'marketing', 'estrategias digitales', 'campana', 'creativa', 'comunicacion', 'marca'],
         accounting: ['auditoria', 'impositiva', 'tributaria', 'tributario', 'contabilidad', 'fiscal', 'gabinete de auditoria', 'balance', 'financiero', 'finanzas'],
@@ -1198,6 +1219,7 @@
         management: ['administracion', 'operaciones', 'proyecto integrador', 'gestion', 'estrategia', 'gerencia']
       };
 
+      if (careerCode === 'PSI' || keywordSets.psychology.some(k => subject.includes(k))) return 'psychology';
       if (keywordSets.research.some(k => subject.includes(k))) return 'research';
       if (keywordSets.marketing.some(k => subject.includes(k))) return 'marketing';
       if (keywordSets.accounting.some(k => subject.includes(k))) {
@@ -1259,7 +1281,14 @@
           research_workspace: 'a focused research workspace',
           modern_classroom: 'a modern academic classroom',
           library: 'a quiet library or archive setting',
-          home_office: 'a polished home office study environment'
+          home_office: 'a polished home office study environment',
+          psychology_consulting: 'a professional psychology consulting room',
+          psychology_assessment: 'a psychological assessment environment',
+          clinical_center: 'a professional health and psychology center',
+          organizational_office: 'a workplace psychology or human resources office',
+          educational_space: 'a modern educational psychology environment',
+          research_lab: 'a psychology research laboratory',
+          interview_room: 'a professional interview room'
         },
         device: {
           auto: 'the most appropriate device for the scene',
@@ -1585,13 +1614,15 @@
       const promptSubtitle = getPromptSubtitle(card.key);
       const domainPromptLabel = getDomainPromptLabel(domain);
 
-      const values = {};
-      Object.keys(fieldLabels).forEach(field => {
-        const el = document.getElementById(`${cardKey}-${field}`);
-        values[field] = el ? el.value : 'auto';
-      });
+      const values = getCurrentCardValues(cardKey);
       const defaults = getDefaultFieldValues(card);
       const mergedValues = { ...defaults, ...values };
+      if (card.key === 'tar_hito5' || card.key === 'banner_h5') {
+        const selectedGroupCount = document.getElementById(`${card.key}-groupCount`);
+        if (selectedGroupCount && selectedGroupCount.value) {
+          mergedValues.groupCount = selectedGroupCount.value;
+        }
+      }
       if (card.key === 'tar_hito5') {
         mergedValues.gender = 'mixed_group';
       }
@@ -1851,11 +1882,17 @@
         values[field] = el ? el.value : defaults[field];
       });
       const mergedValues = { ...defaults, ...values };
+      if (card.key === 'tar_hito5' || card.key === 'banner_h5') {
+        const selectedGroupCount = document.getElementById(`${card.key}-groupCount`);
+        if (selectedGroupCount && selectedGroupCount.value) {
+          mergedValues.groupCount = selectedGroupCount.value;
+        }
+      }
       if (card.key === 'banner_h5') mergedValues.gender = 'mixed_group';
       const resolved = resolvePromptValues(card, mergedValues);
       const focusObject = getPrimaryFocusObject(resolved.device, resolved.tools);
       const teamScene = card.key === 'banner_h5';
-      const subjectNarrative = teamScene ? getTeamCountNarrative(resolved.groupCount) : optionToNarrative('subject', card.defaultSubject, domain);
+      const subjectNarrative = teamScene ? getTeamCountNarrative(resolved.groupCount || '4') : optionToNarrative('subject', card.defaultSubject, domain);
       const genderNarrative = optionToNarrative('gender', resolved.gender, domain);
       const ageNarrative = optionToNarrative('ageRange', resolved.ageRange, domain);
       const environmentNarrative = optionToNarrative('environment', resolved.environment, domain);
@@ -1876,7 +1913,7 @@
       const promptParts = [
        `Subject: "${subjectName}". Faculty / career: ${promptCareerLabel}.`,
         teamScene
-          ? `Show ${subjectNarrative} in the professional age range of ${ageNarrative}, collaborating naturally in a final integration activity. Every person must look physically distinct, with different facial structures, hairstyles, skin tone variation, and body language.`
+          ? `Show a team of ${resolved.groupCount || '4'} people in the professional age range of ${ageNarrative}, collaborating naturally in a final integration activity. Every person must look physically distinct, with different facial structures, hairstyles, skin tone variation, and body language.`
           : `Show ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}, with ${appearanceDescriptor} and ${appearanceParts}.`,
        `Portray a believable ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
        `The scene should communicate ${getBannerSceneAction(card, profile)}.`,
@@ -2191,7 +2228,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    function loadState() {
+    function loadState(applySaved = true) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       try {
@@ -2420,7 +2457,7 @@
       buildRenderRules();
       buildPromptCards();
       buildBannerCards();
-      loadState();
+      loadState(false);
       attachEvents();
       updateDetectedContext();
       saveState();

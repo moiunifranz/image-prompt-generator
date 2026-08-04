@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image prompt generator v1.0.20</title>
+  <title>Image prompt generator v1.0.19</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%2307111f%27/%3E%3Cpath d=%27M16 22h32v6H35v22h-6V28H16z%27 fill=%27%2338bdf8%27/%3E%3Cpath d=%27M46 16l2.5 5.5L54 24l-5.5 2.5L46 32l-2.5-5.5L38 24l5.5-2.5z%27 fill=%27%23818cf8%27/%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -321,7 +321,7 @@
         <div>
           <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-3 uppercase">
             <span>IMAGE PROMPT GENERATOR</span>
-            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.20</span>
+            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.19</span>
           </h1>
           <p class="mt-3 max-w-4xl text-slate-300/90 leading-relaxed text-sm md:text-base">
             Generador de prompts académicos para Unifranz Online con personalización general e individual y lógica visual segura.
@@ -511,7 +511,7 @@
   </div>
 
   <script>
-    const APP_VERSION = 'v1.0.20';
+    const APP_VERSION = 'v1.0.19';
     const STORAGE_KEY = 'image_prompt_generator_v1_0_15';
     const THEME_KEY = 'image_prompt_generator_theme_v1_0_14';
 
@@ -1614,7 +1614,11 @@
       const promptSubtitle = getPromptSubtitle(card.key);
       const domainPromptLabel = getDomainPromptLabel(domain);
 
-      const values = getCurrentCardValues(cardKey);
+      const values = {};
+      Object.keys(fieldLabels).forEach(field => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        values[field] = el ? el.value : 'auto';
+      });
       const defaults = getDefaultFieldValues(card);
       const mergedValues = { ...defaults, ...values };
       if (card.key === 'tar_hito5' || card.key === 'banner_h5') {
@@ -2228,7 +2232,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    function loadState(applySaved = true) {
+    function loadState() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       try {
@@ -2457,7 +2461,7 @@
       buildRenderRules();
       buildPromptCards();
       buildBannerCards();
-      loadState(false);
+      loadState();
       attachEvents();
       updateDetectedContext();
       saveState();

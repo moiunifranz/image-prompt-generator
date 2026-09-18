@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image prompt generator v1.0.21</title>
+  <title>Image prompt generator v1.0.19</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%2307111f%27/%3E%3Cpath d=%27M16 22h32v6H35v22h-6V28H16z%27 fill=%27%2338bdf8%27/%3E%3Cpath d=%27M46 16l2.5 5.5L54 24l-5.5 2.5L46 32l-2.5-5.5L38 24l5.5-2.5z%27 fill=%27%23818cf8%27/%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,7 +87,7 @@
       padding: 10px 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
     }
-    .form-textarea { min-height: 170px; resize: vertical; }
+    .form-textarea { min-height: 190px; resize: vertical; }
     .form-field:hover, .form-select:hover, .form-textarea:hover {
       border-color: rgba(56, 189, 248, 0.42);
     }
@@ -216,6 +216,17 @@
       from { transform: translateY(-8px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
+    .soon-card {
+      border-radius: 26px;
+      border: 1px solid rgba(148,163,184,.14);
+      background: radial-gradient(circle at top, rgba(56,189,248,.12), transparent 26%), linear-gradient(180deg, rgba(15,23,42,.94), rgba(8,15,29,.96));
+    }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: rgba(15,23,42,.55); }
+    ::-webkit-scrollbar-thumb { background: rgba(100,116,139,.85); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(125,211,252,.7); }
+
+
     .color-preview-control {
       display: flex;
       align-items: center;
@@ -231,6 +242,10 @@
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 3px 12px rgba(2,6,23,.22);
     }
     .color-preview-control .form-select { flex: 1; min-width: 0; }
+    body.light-theme .color-preview-swatch {
+      border-color: rgba(100,116,139,.55);
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,.08), 0 3px 10px rgba(15,23,42,.12);
+    }
 
     body.light-theme {
       color: #0f172a;
@@ -250,7 +265,8 @@
       box-shadow: 0 20px 50px rgba(148, 163, 184, 0.18);
     }
     body.light-theme .glass-soft,
-    body.light-theme .prompt-card {
+    body.light-theme .prompt-card,
+    body.light-theme .soon-card {
       background: rgba(255, 255, 255, 0.90);
       border-color: rgba(148, 163, 184, 0.28);
       box-shadow: 0 14px 40px rgba(148, 163, 184, 0.12);
@@ -282,23 +298,33 @@
     }
     body.light-theme .label { color: #4338ca; }
     body.light-theme .helper { color: #64748b; }
+    body.light-theme .text-white,
+    body.light-theme .text-slate-200,
+    body.light-theme .text-slate-300,
+    body.light-theme .text-slate-300\/90,
+    body.light-theme .text-slate-400 { color: #0f172a !important; }
     body.light-theme .badge { background: rgba(56,189,248,.12); color: #0369a1; }
     body.light-theme .mono { color: #0f172a; }
+    body.light-theme footer p { color: #475569; }
+
+    @media (max-width: 768px) {
+      .form-textarea { min-height: 160px; }
+    }
   </style>
 </head>
 <body class="text-slate-100 min-h-screen">
   <div id="app-toast-container" class="fixed top-5 right-5 z-50 space-y-3 pointer-events-none"></div>
 
-  <div class="max-w-[1600px] mx-auto px-4 py-6 md:py-10 flex flex-col min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-6 md:py-10 flex flex-col min-h-screen">
     <header class="glass rounded-[28px] p-6 md:p-8 mb-6 md:mb-8">
       <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-5">
         <div>
           <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-3 uppercase">
             <span>IMAGE PROMPT GENERATOR</span>
-            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.21</span>
+            <span class="text-sm font-mono font-semibold px-2.5 py-1 rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-300 normal-case">v1.0.19</span>
           </h1>
           <p class="mt-3 max-w-4xl text-slate-300/90 leading-relaxed text-sm md:text-base">
-            Generador de prompts académicos para Unifranz Online con vista optimizada en dos columnas para escritorio, personalización general e individual y lógica visual segura.
+            Generador de prompts académicos para Unifranz Online con personalización general e individual y lógica visual segura.
           </p>
         </div>
         <div class="flex md:justify-end">
@@ -323,7 +349,7 @@
               <button id="generate-all-btn" class="primary-btn"><i class="fa-solid fa-wand-magic-sparkles"></i>Generar todo</button>
               <button id="copy-all-btn" class="secondary-btn"><i class="fa-solid fa-copy"></i>Copiar todo</button>
               <button id="autofill-btn" class="secondary-btn"><i class="fa-solid fa-brain"></i>Autocompletar</button>
-              <button id="reset-all-cards-btn" class="secondary-btn danger-btn"><i class="fa-solid fa-layer-group"></i>Restablecer todas las tarjetas</button>
+<button id="reset-all-cards-btn" class="secondary-btn danger-btn"><i class="fa-solid fa-layer-group"></i>Restablecer todas las tarjetas</button>
             </div>
           </div>
 
@@ -397,11 +423,11 @@
           <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
             <div>
               <h2 class="text-2xl font-extrabold tracking-tight text-white">Prompts por bloque de plantilla</h2>
-              <p class="helper mt-1">Vista configurada en dos columnas para computadoras y laptops.</p>
+              <p class="helper mt-1">Cada tarjeta permite un control individual completo del prompt.</p>
             </div>
             <div class="helper">Las salidas se guardan automáticamente en tu navegador.</div>
           </div>
-          <div id="prompt-cards" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+          <div id="prompt-cards" class="grid grid-cols-1 2xl:grid-cols-2 gap-5"></div>
         </section>
       </section>
 
@@ -465,7 +491,7 @@
             <h2 class="text-2xl font-extrabold tracking-tight text-white">Prompts para banners de plantilla</h2>
             <p class="helper mt-1">Columna izquierda: H1 a H5 y comunicación docente. Columna derecha: ocho bloques individuales.</p>
           </div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
             <div>
               <h3 class="text-lg font-extrabold text-white mb-3">Banners Hitos y docente</h3>
               <div id="banner-left-cards" class="space-y-5"></div>
@@ -480,14 +506,14 @@
     </main>
 
     <footer class="mt-10 pt-6 border-t border-slate-800/80 text-center">
-      <p class="text-xs font-semibold tracking-[.18em] uppercase text-slate-400">Created by Moises Luna for Unifranz Online — v1.0.21</p>
+      <p class="text-xs font-semibold tracking-[.18em] uppercase text-slate-400">Created by Moises Luna for Unifranz Online</p>
     </footer>
   </div>
 
   <script>
-    const APP_VERSION = 'v1.0.21';
-    const STORAGE_KEY = 'image_prompt_generator_v1_0_21';
-    const THEME_KEY = 'image_prompt_generator_theme_v1_0_21';
+    const APP_VERSION = 'v1.0.19';
+    const STORAGE_KEY = 'image_prompt_generator_v1_0_15';
+    const THEME_KEY = 'image_prompt_generator_theme_v1_0_14';
 
     const renderRules = [
       { id: 'avoid_bad_hands', label: 'Evitar manos deformes o dedos extra', promptLabel: 'avoid deformed hands or extra fingers' },
@@ -503,7 +529,6 @@
       { id: 'avoid_awkward_expression', label: 'Evitar expresiones extrañas o forzadas', promptLabel: 'avoid awkward or forced facial expressions' },
       { id: 'avoid_background_artifacts', label: 'Evitar deformaciones en fondo, muebles o arquitectura', promptLabel: 'avoid artifacts or distortions in backgrounds, furniture, and architecture' }
     ];
-
     const professionOptions = {
       common: [
         { value: 'auto', label: 'Auto según materia y carrera' },
@@ -712,13 +737,74 @@
     };
 
     const HITO_CONFIGS = [
-      { key: 'header', title: 'header', subtitle: 'Presentación general de la asignatura, con una persona como protagonista.', phase: 'Presentación general de la asignatura', defaultSubject: 'professional_single', defaultDevice: 'auto', defaultTools: 'auto', defaultComposition: 'medium_shot', defaultEnvironment: 'auto' },
-      { key: 'tar_hito1', title: 'tar_hito1', subtitle: 'Diagnóstico (Evaluación en línea / Refuerzo)', phase: 'Diagnóstico', defaultSubject: 'adult_student', defaultDevice: 'laptop', defaultTools: 'auto', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
-      { key: 'tar_hito2', title: 'tar_hito2', subtitle: 'Avance (Aplicación de Conceptos)', phase: 'Avance', defaultSubject: 'professional_single', defaultDevice: 'laptop', defaultTools: 'auto', defaultComposition: 'rule_of_thirds', defaultEnvironment: 'auto' },
-      { key: 'tar_hito3', title: 'tar_hito3', subtitle: 'Investigación (Aprendizaje Interactivo)', phase: 'Investigación', defaultSubject: 'adult_student', defaultDevice: 'tablet', defaultTools: 'research_materials', defaultComposition: 'half_body', defaultEnvironment: 'research_workspace' },
-      { key: 'tar_hito4', title: 'tar_hito4', subtitle: 'Innovación (Revisión de Desempeño)', phase: 'Innovación', defaultSubject: 'senior_executive', defaultDevice: 'desktop', defaultTools: 'presentation_tools', defaultComposition: 'medium_shot', defaultEnvironment: 'innovation_lab' },
-      { key: 'tar_hito5', title: 'tar_hito5', subtitle: 'Integración (Colaboración en Equipo, presentación final)', phase: 'Integración', defaultSubject: 'small_team', defaultDevice: 'laptop', defaultTools: 'presentation_tools', defaultComposition: 'wide_context', defaultEnvironment: 'meeting_room' }
+      {
+        key: 'header',
+        title: 'header',
+        subtitle: 'Presentación general de la asignatura, con una persona como protagonista.',
+        phase: 'Presentación general de la asignatura',
+        defaultSubject: 'professional_single',
+        defaultDevice: 'auto',
+        defaultTools: 'auto',
+        defaultComposition: 'medium_shot',
+        defaultEnvironment: 'auto'
+      },
+      {
+        key: 'tar_hito1',
+        title: 'tar_hito1',
+        subtitle: 'Diagnóstico (Evaluación en línea / Refuerzo)',
+        phase: 'Diagnóstico',
+        defaultSubject: 'adult_student',
+        defaultDevice: 'laptop',
+        defaultTools: 'auto',
+        defaultComposition: 'desk_focused',
+        defaultEnvironment: 'auto'
+      },
+      {
+        key: 'tar_hito2',
+        title: 'tar_hito2',
+        subtitle: 'Avance (Aplicación de Conceptos)',
+        phase: 'Avance',
+        defaultSubject: 'professional_single',
+        defaultDevice: 'laptop',
+        defaultTools: 'auto',
+        defaultComposition: 'rule_of_thirds',
+        defaultEnvironment: 'auto'
+      },
+      {
+        key: 'tar_hito3',
+        title: 'tar_hito3',
+        subtitle: 'Investigación (Aprendizaje Interactivo)',
+        phase: 'Investigación',
+        defaultSubject: 'adult_student',
+        defaultDevice: 'tablet',
+        defaultTools: 'research_materials',
+        defaultComposition: 'half_body',
+        defaultEnvironment: 'research_workspace'
+      },
+      {
+        key: 'tar_hito4',
+        title: 'tar_hito4',
+        subtitle: 'Innovación (Revisión de Desempeño)',
+        phase: 'Innovación',
+        defaultSubject: 'senior_executive',
+        defaultDevice: 'desktop',
+        defaultTools: 'presentation_tools',
+        defaultComposition: 'medium_shot',
+        defaultEnvironment: 'innovation_lab'
+      },
+      {
+        key: 'tar_hito5',
+        title: 'tar_hito5',
+        subtitle: 'Integración (Colaboración en Equipo, presentación final)',
+        phase: 'Integración',
+        defaultSubject: 'small_team',
+        defaultDevice: 'laptop',
+        defaultTools: 'presentation_tools',
+        defaultComposition: 'wide_context',
+        defaultEnvironment: 'meeting_room'
+      }
     ];
+
 
     const BANNER_CONFIGS = [
       { key: 'banner_h1', title: 'banner_h1', subtitle: 'Banner del Hito 1 — Diagnóstico', phase: 'Diagnóstico', side: 'left', defaultSubject: 'adult_student', defaultDevice: 'laptop', defaultTools: 'notebook_basic', defaultComposition: 'desk_focused', defaultEnvironment: 'auto' },
@@ -752,7 +838,7 @@
     const domainProfiles = {
       psychology: {
         label: 'Psicología / comportamiento humano',
-        autoSummary: 'Entornos psicológicos enfocados en evaluación, comportamiento humano, procesos cognitivos, emociones, desarrollo personal e investigación.',
+        autoSummary: 'Entornos psicológicos enfocados en evaluación, comportamiento humano, procesos cognitivos, emociones, desarrollo personal, investigación aplicada y análisis de casos.',
         professionFallback: 'clinical_psychologist',
         environments: ['psychology_consulting', 'psychology_assessment', 'research_lab', 'educational_space', 'organizational_office'],
         devices: ['laptop', 'tablet', 'printed_only'],
@@ -761,7 +847,7 @@
           header: 'introducing the subject through a psychology professional analyzing human behavior and applied psychological concepts',
           tar_hito1: 'performing an online psychological evaluation activity, reviewing concepts and reinforcing foundational knowledge',
           tar_hito2: 'applying psychological concepts to analyze human behavior, cases, or professional situations',
-          tar_hito3: 'researching psychological theories, assessment methods, cognitive processes, or behavioral studies',
+          tar_hito3: 'researching psychological theories, assessment methods, cognitive processes, or behavioral studies in an interactive learning process',
           tar_hito4: 'reviewing performance, interpreting findings, and improving psychological analysis or intervention proposals',
           tar_hito5: 'collaborating in a final psychology presentation with a diverse team integrating research findings and conclusions'
         },
@@ -778,32 +864,32 @@
           header: 'introducing the subject through a confident legal professional immersed in academic and professional legal work',
           tar_hito1: 'reviewing legal materials for an online diagnostic evaluation and reinforcement activity',
           tar_hito2: 'applying legal concepts to a practical professional scenario related to the subject',
-          tar_hito3: 'researching doctrine, legal sources, jurisprudence, or structured learning materials',
-          tar_hito4: 'reviewing legal performance, refining reasoning, and improving proposed solutions',
+          tar_hito3: 'researching doctrine, legal sources, jurisprudence, or structured learning materials in an interactive study process',
+          tar_hito4: 'reviewing legal performance, refining reasoning, and improving proposed solutions in an innovation-oriented moment',
           tar_hito5: 'collaborating in a final legal presentation with a small team, integrating conclusions and deliverables'
         },
         objectPhrases: 'legal files, annotated documents, law books, organized notes, and subtle institutional details'
       },
       marketing: {
         label: 'Marketing / creatividad',
-        autoSummary: 'Escenas creativas, estrategia de marca, campañas, análisis de audiencias, contenido y propuestas visuales.',
+        autoSummary: 'Escenas creativas, estrategia de marca, campañas, análisis de audiencias, contenido y revisión de propuestas visuales.',
         professionFallback: 'marketing_strategist',
         environments: ['marketing_studio', 'innovation_lab', 'meeting_room', 'home_office'],
         devices: ['laptop', 'tablet', 'desktop', 'smartphone'],
         tools: ['marketing_assets', 'presentation_tools', 'notebook_basic'],
         phaseActions: {
           header: 'introducing the subject through a creative professional with a polished, strategic, and contemporary presence',
-          tar_hito1: 'evaluating the subject through online assessment, concept reinforcement, or diagnostic review',
+          tar_hito1: 'evaluating the subject through online assessment, concept reinforcement, or diagnostic review of creative criteria',
           tar_hito2: 'applying branding, marketing, or communication concepts to a practical case',
-          tar_hito3: 'researching references, audience insights, or learning materials',
-          tar_hito4: 'reviewing performance, testing ideas, and refining creative or strategic outputs',
+          tar_hito3: 'researching references, audience insights, or learning materials in an interactive study process',
+          tar_hito4: 'reviewing performance, testing ideas, and refining creative or strategic outputs with an innovation mindset',
           tar_hito5: 'collaborating in a final team presentation, aligning campaign ideas and academic deliverables'
         },
-        objectPhrases: 'campaign notes, printed layouts, moodboards, brand references, color swatches, and creative materials'
+        objectPhrases: 'campaign notes, printed layouts, moodboards, brand references, color swatches, and polished creative materials'
       },
       accounting: {
         label: 'Contable / auditoría / tributario',
-        autoSummary: 'Oficinas contables, auditoría, revisión de cifras, normativa tributaria, documentos financieros y estados.',
+        autoSummary: 'Oficinas contables, auditoría, revisión de cifras, normativa tributaria, documentos financieros y análisis de estados.',
         professionFallback: 'tax_auditor',
         environments: ['accounting_office', 'executive_office', 'meeting_room', 'research_workspace'],
         devices: ['laptop', 'desktop', 'printed_only', 'tablet'],
@@ -813,27 +899,27 @@
           tar_hito1: 'reviewing documents for an online diagnostic evaluation and foundational reinforcement',
           tar_hito2: 'applying accounting, auditing, tax, or finance concepts to a practical case',
           tar_hito3: 'researching evidence, standards, or learning materials in an interactive study process',
-          tar_hito4: 'reviewing performance indicators, checking findings, and refining conclusions',
+          tar_hito4: 'reviewing performance indicators, checking findings, and refining conclusions with an innovation focus',
           tar_hito5: 'integrating results in a final team presentation, collaboratively reviewing conclusions and recommendations'
         },
         objectPhrases: 'financial statements, audit papers, calculators, tax documents, organized files, and structured reports'
       },
       business: {
         label: 'Negocios / comercial / finanzas',
-        autoSummary: 'Entornos corporativos con estrategia comercial, análisis de mercado, finanzas internacionales, dashboards y negocios.',
+        autoSummary: 'Entornos corporativos con estrategia comercial, análisis de mercado, finanzas internacionales, dashboards y desarrollo de negocio.',
         professionFallback: 'business_analyst',
         environments: ['executive_office', 'meeting_room', 'innovation_lab', 'home_office'],
         devices: ['laptop', 'desktop', 'tablet', 'dual_monitor'],
         tools: ['business_reports', 'presentation_tools', 'mixed_tools'],
         phaseActions: {
           header: 'introducing the subject through a professional connected to strategy, analytics, or business development',
-          tar_hito1: 'reviewing an online diagnostic task and reinforcement materials tied to business performance',
+          tar_hito1: 'reviewing an online diagnostic task and reinforcement materials tied to business performance or conceptual understanding',
           tar_hito2: 'applying commercial, financial, or business intelligence concepts to a realistic scenario',
           tar_hito3: 'researching market, data, or structured learning inputs in an interactive learning process',
-          tar_hito4: 'reviewing performance, testing improvements, and refining decisions',
+          tar_hito4: 'reviewing performance, testing improvements, and refining decisions with an innovation perspective',
           tar_hito5: 'collaborating on a final presentation with a small team, integrating data, analysis, and recommendations'
         },
-        objectPhrases: 'business reports, KPI charts, market analysis sheets, dashboards, executive notes, and desk tools'
+        objectPhrases: 'business reports, KPI charts, market analysis sheets, dashboards, executive notes, and polished desk tools'
       },
       management: {
         label: 'Gestión / administración',
@@ -864,10 +950,10 @@
           tar_hito1: 'reviewing diagnostic and reinforcement materials in an online academic learning moment',
           tar_hito2: 'applying concepts to a structured academic or professional task',
           tar_hito3: 'researching sources, comparing references, and learning interactively through guided inquiry',
-          tar_hito4: 'reviewing performance, revising outputs, and improving proposals',
+          tar_hito4: 'reviewing performance, revising outputs, and improving proposals with an innovation-oriented perspective',
           tar_hito5: 'integrating results in a collaborative final presentation with clear teamwork dynamics'
         },
-        objectPhrases: 'research notes, highlighted readings, organized printed material, notebooks, and academic tools'
+        objectPhrases: 'research notes, highlighted readings, organized printed material, notebooks, and academic reference tools'
       }
     };
 
@@ -889,6 +975,26 @@
       businessStyle: 'Estilo de negocios seguro'
     };
 
+    const fieldHelp = {
+      gender: 'Define el tipo de protagonista o grupo principal.',
+      light: 'Controla la atmósfera y la luz de la escena.',
+      environment: 'Selecciona dónde se desarrolla la acción.',
+      device: 'Elige el dispositivo o tipo de interacción principal.',
+      cameraAngle: 'Ajusta la percepción visual y la jerarquía del sujeto.',
+      composition: 'Controla el encuadre del resultado.',
+      ageRange: 'Define el rango de edad principal del sujeto o del grupo protagonista.',
+      groupCount: 'Define la cantidad aproximada de personas en la escena de integración.',
+      tools: 'Establece el conjunto de objetos relevantes.',
+      facialStyle: 'Determina el tipo de facciones o apariencia general.',
+      hairStyle: 'Selecciona el peinado o estilo de cabello.',
+      facialHair: 'Selecciona el estilo de barba para personajes masculinos.',
+      accessory: 'Selecciona el accesorio principal.',
+      clothingType: 'Selecciona el tipo de prenda.',
+      clothingColor: 'Selecciona el color principal de la prenda.',
+      businessStyle: 'Controla el vestuario y el lenguaje profesional.'
+    };
+
+
     function normalizeAppearanceGender(gender) {
       if (gender === 'woman' || gender === 'man') return gender;
       if (gender === 'mixed_group') return 'mixed';
@@ -901,7 +1007,9 @@
 
     function getAllowedClothingColors(gender, clothingType) {
       const normalized = normalizeAppearanceGender(gender);
-      if (normalized === 'woman') return professionalClothingColors;
+      if (normalized === 'woman') {
+        return professionalClothingColors;
+      }
       if (normalized === 'man') {
         if (clothingType === 'tailored business suit') {
           const suitVals = ['navy blue', 'charcoal gray', 'black', 'chocolate brown', 'deep burgundy', 'petrol blue', 'soft olive green'];
@@ -991,9 +1099,35 @@
       return { ...base, ...getDefaultAppearanceValues(base.gender) };
     }
 
+    function getAppearancePromptValue(field, value) {
+      if (!value) return '';
+      if (field === 'clothingColor') {
+        return professionalClothingColors.find(c => c.val === value)?.val || value;
+      }
+      return value;
+    }
+
     function getDefaultAgeRange(cardKey) {
-      const map = { header: '25_34', tar_hito1: '25_34', tar_hito2: '25_34', tar_hito3: '25_34', tar_hito4: '35_44', tar_hito5: '25_34' };
+      const map = {
+        header: '25_34',
+        tar_hito1: '25_34',
+        tar_hito2: '25_34',
+        tar_hito3: '25_34',
+        tar_hito4: '35_44',
+        tar_hito5: '25_34'
+      };
       return map[cardKey] || '25_34';
+    }
+
+    function formatSelectValue(field, value) {
+      const list = optionSets[field] || [];
+      const found = list.find(item => item[0] === value);
+      return found ? found[1] : value;
+    }
+
+    function formatProfession(value) {
+      const found = professionOptions.common.find(opt => opt.value === value);
+      return found ? found.label : value;
     }
 
     function formatProfessionPrompt(value) {
@@ -1013,12 +1147,63 @@
       return map[value] || String(value || '').replace(/_/g, ' ');
     }
 
+    function careerLabel(careerCode) {
+      return (careerData[careerCode] || careerData.OTHER).label;
+    }
+
     function careerLabelPrompt(careerCode) {
       const map = {
-        DER: 'Law', ICO: 'Commercial Engineering', ADM: 'Business Administration',
-        PYM: 'Advertising and Marketing', CPU: 'Public Accounting', MULTI: 'Multidisciplinary / General', OTHER: 'Other'
+        DER: 'Law',
+        ICO: 'Commercial Engineering',
+        ADM: 'Business Administration',
+        PYM: 'Advertising and Marketing',
+        CPU: 'Public Accounting',
+        MULTI: 'Multidisciplinary / General',
+        OTHER: 'Other'
       };
       return map[careerCode] || 'Other';
+    }
+
+    function getPromptPhase(cardKey) {
+      const map = {
+        header: 'General Introduction',
+        tar_hito1: 'Diagnostic',
+        tar_hito2: 'Progress',
+        tar_hito3: 'Research',
+        tar_hito4: 'Innovation',
+        tar_hito5: 'Integration'
+      };
+      return map[cardKey] || 'Learning Phase';
+    }
+
+    function getPromptSubtitle(cardKey) {
+      const map = {
+        header: 'General presentation of the subject with one main protagonist.',
+        tar_hito1: 'Diagnostic stage focused on online assessment and reinforcement.',
+        tar_hito2: 'Progress stage focused on applying concepts.',
+        tar_hito3: 'Research stage focused on interactive learning.',
+        tar_hito4: 'Innovation stage focused on performance review.',
+        tar_hito5: 'Integration stage focused on teamwork and a final presentation.'
+      };
+      return map[cardKey] || '';
+    }
+
+    function getDomainPromptLabel(domain) {
+      const map = {
+        law: 'legal practice and academic law',
+        marketing: 'marketing and creative strategy',
+        accounting: 'accounting, audit, tax, and finance practice',
+        business: 'business strategy, analytics, and commercial development',
+        management: 'management and operational leadership',
+        research: 'academic research and structured learning'
+      };
+      return map[domain] || 'professional academic work';
+    }
+
+    function titleCase(value) {
+      return String(value || '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
     }
 
     function detectDomain(subjectName, careerCode) {
@@ -1037,10 +1222,22 @@
       if (careerCode === 'PSI' || keywordSets.psychology.some(k => subject.includes(k))) return 'psychology';
       if (keywordSets.research.some(k => subject.includes(k))) return 'research';
       if (keywordSets.marketing.some(k => subject.includes(k))) return 'marketing';
-      if (keywordSets.accounting.some(k => subject.includes(k))) return 'accounting';
+      if (keywordSets.accounting.some(k => subject.includes(k))) {
+        if (subject.includes('finanzas internacionales') && careerCode === 'ICO') return 'business';
+        return 'accounting';
+      }
       if (keywordSets.law.some(k => subject.includes(k))) return 'law';
       if (keywordSets.business.some(k => subject.includes(k))) return 'business';
-      if (keywordSets.management.some(k => subject.includes(k))) return 'management';
+      if (keywordSets.management.some(k => subject.includes(k))) {
+        if (subject.includes('proyecto integrador')) {
+          if (careerCode === 'DER') return 'law';
+          if (careerCode === 'CPU') return 'accounting';
+          if (careerCode === 'PUB' || careerCode === 'PYM') return 'marketing';
+          if (careerCode === 'ADM') return 'management';
+          if (careerCode === 'ICO') return 'business';
+        }
+        return 'management';
+      }
 
       return (careerData[careerCode] || careerData.OTHER).defaultDomain;
     }
@@ -1056,71 +1253,348 @@
       return { domain, profile };
     }
 
-    function getDomainPromptLabel(domain) {
-      const map = {
-        law: 'legal practice and academic law',
-        marketing: 'marketing and creative strategy',
-        accounting: 'accounting, audit, tax, and finance practice',
-        business: 'business strategy, analytics, and commercial development',
-        management: 'management and operational leadership',
-        research: 'academic research and structured learning'
-      };
-      return map[domain] || 'professional academic work';
-    }
-
-    function nationalityNarrative(value) {
-      const map = {
-        bolivian: 'Bolivian', peruvian: 'Peruvian', argentinian: 'Argentinian', chilean: 'Chilean',
-        colombian: 'Colombian', ecuadorian: 'Ecuadorian', brazilian: 'Brazilian', paraguayan: 'Paraguayan',
-        mexican: 'Mexican', latin_american: 'Latin American', international: 'international'
-      };
-      return map[value] || 'Latin American';
-    }
-
     function optionToNarrative(type, value, domain) {
       const profile = domainProfiles[domain] || domainProfiles.business;
       const map = {
-        gender: { auto: 'a professionally styled protagonist', woman: 'a woman professional', man: 'a man professional', non_binary: 'a non-binary professional', mixed_group: 'a mixed-gender team' },
-        light: { morning_soft: 'soft morning light', daylight_neutral: 'neutral daylight', afternoon_warm: 'warm afternoon light', evening_corporate: 'controlled evening corporate lighting', bright_studio: 'clean bright studio-like lighting' },
+        gender: {
+          auto: 'a professionally styled protagonist that best fits the scene',
+          woman: 'a woman professional',
+          man: 'a man professional',
+          non_binary: 'a non-binary professional',
+          mixed_group: 'a mixed-gender professional group'
+        },
+        light: {
+          morning_soft: 'soft morning light',
+          daylight_neutral: 'neutral daylight',
+          afternoon_warm: 'warm afternoon light',
+          evening_corporate: 'controlled evening corporate lighting',
+          bright_studio: 'clean bright studio-like lighting'
+        },
         environment: {
           auto: `a setting appropriate to ${getDomainPromptLabel(domain)}`,
-          law_office: 'a legal office or law firm interior', meeting_room: 'a modern meeting room', executive_office: 'a premium executive office',
-          accounting_office: 'a professional accounting office', marketing_studio: 'a creative marketing studio', innovation_lab: 'a modern innovation hub',
-          research_workspace: 'a focused research workspace', modern_classroom: 'a modern academic classroom', library: 'a quiet library', home_office: 'a polished home office'
+          law_office: 'a legal office or law firm interior',
+          meeting_room: 'a modern meeting room',
+          executive_office: 'a premium executive office',
+          accounting_office: 'a professional accounting office',
+          marketing_studio: 'a creative marketing studio',
+          innovation_lab: 'a modern innovation hub',
+          research_workspace: 'a focused research workspace',
+          modern_classroom: 'a modern academic classroom',
+          library: 'a quiet library or archive setting',
+          home_office: 'a polished home office study environment',
+          psychology_consulting: 'a professional psychology consulting room',
+          psychology_assessment: 'a psychological assessment environment',
+          clinical_center: 'a professional health and psychology center',
+          organizational_office: 'a workplace psychology or human resources office',
+          educational_space: 'a modern educational psychology environment',
+          research_lab: 'a psychology research laboratory',
+          interview_room: 'a professional interview room'
         },
-        device: { auto: 'the most appropriate device', laptop: 'a laptop used naturally', desktop: 'a desktop workstation', tablet: 'a tablet used naturally', smartphone: 'a smartphone in active use', dual_monitor: 'a dual-monitor workstation', printed_only: 'printed materials', none: 'no visible digital device' },
-        cameraAngle: { eye_level: 'camera at eye level', three_quarter: 'a 3/4 frontal camera angle', slight_low: 'a subtle low angle', slight_high: 'a subtle high angle', over_shoulder: 'an over-the-shoulder camera view' },
-        composition: { medium_shot: 'a medium editorial shot', half_body: 'a half-body composition', desk_focused: 'a desk-focused editorial composition', wide_context: 'a wide contextual composition', symmetrical: 'a symmetrical composition', rule_of_thirds: 'a rule-of-thirds composition' },
-        subject: { auto: 'the most suitable subject structure', professional_single: 'a single professional protagonist', adult_student: 'an adult learner with a professional presence', senior_executive: 'a senior executive-style professional', mentor: 'a mentor or faculty-style professional', duo: 'two collaborative professionals', small_team: 'a small collaborative team' },
-        ageRange: { auto: 'an age range that best fits the scene', '18_24': '18 to 24 years old', '25_34': '25 to 34 years old', '35_44': '35 to 44 years old', '45_54': '45 to 54 years old', '55_plus': '55 years old or older' },
-        tools: { auto: `${profile.objectPhrases}`, legal_files: 'legal files and books', business_reports: 'executive reports and KPI summaries', marketing_assets: 'briefings and moodboards', financial_docs: 'financial statements and audit papers', research_materials: 'readings and reference sheets', presentation_tools: 'presentation sheets and notes', notebook_basic: 'a notebook and pen', mixed_tools: 'mixed professional tools' },
-        facialStyle: { latino_corporate: 'Latin American corporate facial features', mestizo_professional: 'mestizo professional features', andean_refined: 'refined Andean features', soft_executive: 'soft executive features', modern_professional: 'modern professional features', afrolatin_professional: 'Afro-Latin professional features' },
-        businessStyle: { executive_formal: 'formal executive business attire', business_casual: 'clean business casual attire', smart_casual_premium: 'premium smart casual attire', legal_classic: 'classic legal attire', financial_sophisticated: 'sophisticated finance attire', creative_professional: 'creative professional attire' }
+        device: {
+          auto: 'the most appropriate device for the scene',
+          laptop: 'a laptop used naturally',
+          desktop: 'a desktop workstation used naturally',
+          tablet: 'a tablet used naturally',
+          smartphone: 'a smartphone used naturally',
+          dual_monitor: 'a dual-monitor workstation',
+          printed_only: 'printed materials as the main interaction element',
+          none: 'no visible digital device'
+        },
+        cameraAngle: {
+          eye_level: 'camera at eye level',
+          three_quarter: 'a 3/4 frontal camera angle',
+          slight_low: 'a subtle low angle',
+          slight_high: 'a subtle high angle',
+          over_shoulder: 'an over-the-shoulder camera view'
+        },
+        composition: {
+          medium_shot: 'a medium editorial shot',
+          half_body: 'a half-body composition',
+          desk_focused: 'a desk-focused editorial composition',
+          wide_context: 'a wide contextual composition',
+          symmetrical: 'a symmetrical composition',
+          rule_of_thirds: 'a rule-of-thirds composition'
+        },
+        subject: {
+          auto: 'the most suitable subject structure for the hito',
+          professional_single: 'a single professional protagonist',
+          adult_student: 'an adult learner with a professional presence',
+          senior_executive: 'a senior executive-style professional',
+          mentor: 'a mentor or faculty-style professional',
+          duo: 'two collaborative professionals',
+          small_team: 'a small collaborative team of four to five people'
+        },
+        ageRange: {
+          auto: 'an age range that best fits the scene',
+          '18_24': '18 to 24 years old',
+          '25_34': '25 to 34 years old',
+          '35_44': '35 to 44 years old',
+          '45_54': '45 to 54 years old',
+          '55_plus': '55 years old or older'
+        },
+        tools: {
+          auto: `${profile.objectPhrases}`,
+          legal_files: 'legal files, books, printed case documents, and structured notes',
+          business_reports: 'executive reports, KPI summaries, and operational notes',
+          marketing_assets: 'briefings, campaign drafts, moodboards, and creative notes',
+          financial_docs: 'financial statements, audit papers, and tax-related printed documents',
+          research_materials: 'readings, notes, references, and highlighted study materials',
+          presentation_tools: 'presentation sheets, sticky notes, and collaborative review tools',
+          notebook_basic: 'a notebook, pen, and minimal supporting materials',
+          mixed_tools: 'a mixed set of professional and academic tools'
+        },
+        facialStyle: {
+          latino_corporate: 'Latin American corporate facial features',
+          mestizo_professional: 'mestizo professional features',
+          andean_refined: 'refined Andean features',
+          soft_executive: 'soft, confident executive facial features',
+          modern_professional: 'modern professional facial features',
+          afrolatin_professional: 'Afro-Latin professional facial features'
+        },
+        businessStyle: {
+          executive_formal: 'formal executive business attire',
+          business_casual: 'clean business casual attire',
+          smart_casual_premium: 'premium smart casual attire',
+          legal_classic: 'classic legal-style professional attire',
+          financial_sophisticated: 'sophisticated finance-oriented business attire',
+          creative_professional: 'creative professional attire with polish and confidence'
+        }
       };
       return (map[type] && map[type][value]) ? map[type][value] : value;
     }
 
-    async function translateSubjectToEnglish(value) {
-      return String(value || 'Academic Subject').trim();
+    function nationalityNarrative(value) {
+      const map = {
+        bolivian: 'Bolivian',
+        peruvian: 'Peruvian',
+        argentinian: 'Argentinian',
+        chilean: 'Chilean',
+        colombian: 'Colombian',
+        ecuadorian: 'Ecuadorian',
+        brazilian: 'Brazilian',
+        paraguayan: 'Paraguayan',
+        mexican: 'Mexican',
+        latin_american: 'Latin American',
+        international: 'international'
+      };
+      return map[value] || 'Latin American';
     }
 
-    function getSelectedRenderRules() {
-      return Array.from(document.querySelectorAll('#render-rules-container input:checked')).map(cb => cb.value);
+    const SUBJECT_TRANSLATION_CACHE_KEY = 'image_prompt_generator_subject_translations_v1';
+
+    const localSubjectTranslations = {
+      'derecho internacional público': 'Public International Law',
+      'derecho municipal': 'Municipal Law',
+      'gestión creativa publicitaria': 'Creative Advertising Management',
+      'estrategias digitales': 'Digital Strategies',
+      'branding estratégico': 'Strategic Branding',
+      'auditoría impositiva ii': 'Tax Audit II',
+      'business intelligence': 'Business Intelligence',
+      'gabinete de auditoría tributaria': 'Tax Audit Practice',
+      'finanzas internacionales': 'International Finance',
+      'legislación comercial internacional': 'International Commercial Legislation',
+      'metodología de la investigación': 'Research Methodology',
+      'proyecto integrador intermedio iii': 'Intermediate Integrative Project III',
+      'proyecto integrador iii': 'Integrative Project III',
+      'proyecto integrador': 'Integrative Project',
+      'auditoría': 'Audit',
+      'contabilidad': 'Accounting',
+      'administración': 'Business Administration',
+      'marketing': 'Marketing',
+      'publicidad': 'Advertising',
+      'derecho': 'Law',
+      'investigación': 'Research'
+    };
+
+    function normalizeTranslationKey(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function getTranslationCache() {
+      try {
+        return JSON.parse(localStorage.getItem(SUBJECT_TRANSLATION_CACHE_KEY) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveTranslationCache(cache) {
+      try {
+        localStorage.setItem(SUBJECT_TRANSLATION_CACHE_KEY, JSON.stringify(cache));
+      } catch {}
+    }
+
+    function fallbackTranslateSubject(value) {
+      const original = String(value || '').trim();
+      const key = normalizeTranslationKey(original);
+      if (!key) return 'Academic Subject';
+      if (localSubjectTranslations[key]) return localSubjectTranslations[key];
+
+      const phraseMap = [
+        ['metodologia de la investigacion', 'Research Methodology'],
+        ['derecho internacional publico', 'Public International Law'],
+        ['derecho municipal', 'Municipal Law'],
+        ['gestion creativa publicitaria', 'Creative Advertising Management'],
+        ['estrategias digitales', 'Digital Strategies'],
+        ['branding estrategico', 'Strategic Branding'],
+        ['auditoria impositiva', 'Tax Audit'],
+        ['gabinete de auditoria tributaria', 'Tax Audit Practice'],
+        ['finanzas internacionales', 'International Finance'],
+        ['legislacion comercial internacional', 'International Commercial Legislation'],
+        ['proyecto integrador intermedio', 'Intermediate Integrative Project'],
+        ['proyecto integrador', 'Integrative Project'],
+        ['administracion de empresas', 'Business Administration'],
+        ['ingenieria comercial', 'Commercial Engineering'],
+        ['contaduria publica', 'Public Accounting']
+      ];
+
+      let translated = key;
+      phraseMap.forEach(([es, en]) => {
+        translated = translated.replace(es, en);
+      });
+
+      const wordMap = {
+        'derecho': 'Law', 'internacional': 'International', 'publico': 'Public', 'publica': 'Public',
+        'municipal': 'Municipal', 'gestion': 'Management', 'creativa': 'Creative', 'creativo': 'Creative',
+        'publicitaria': 'Advertising', 'publicitario': 'Advertising', 'estrategias': 'Strategies',
+        'digitales': 'Digital', 'estrategico': 'Strategic', 'estrategica': 'Strategic',
+        'auditoria': 'Audit', 'impositiva': 'Tax', 'tributaria': 'Tax', 'tributario': 'Tax',
+        'gabinete': 'Practice', 'finanzas': 'Finance', 'legislacion': 'Legislation',
+        'comercial': 'Commercial', 'metodologia': 'Methodology', 'investigacion': 'Research',
+        'proyecto': 'Project', 'integrador': 'Integrative', 'intermedio': 'Intermediate',
+        'administracion': 'Administration', 'empresas': 'Business', 'contabilidad': 'Accounting',
+        'costos': 'Costs', 'presupuestos': 'Budgets', 'mercados': 'Markets', 'innovacion': 'Innovation',
+        'desarrollo': 'Development', 'organizacional': 'Organizational', 'comunicacion': 'Communication',
+        'marketing': 'Marketing', 'publicidad': 'Advertising', 'economia': 'Economics',
+        'estadistica': 'Statistics', 'matematica': 'Mathematics', 'financiera': 'Financial',
+        'financiero': 'Financial', 'empresarial': 'Business', 'etica': 'Ethics', 'profesional': 'Professional',
+        'teoria': 'Theory', 'practica': 'Practice', 'procesal': 'Procedural', 'civil': 'Civil',
+        'penal': 'Criminal', 'laboral': 'Labor', 'constitucional': 'Constitutional',
+        'societario': 'Corporate', 'aduanero': 'Customs', 'tributacion': 'Taxation',
+        'sistemas': 'Systems', 'informacion': 'Information', 'datos': 'Data', 'inteligencia': 'Intelligence',
+        'negocios': 'Business', 'marca': 'Brand', 'ventas': 'Sales', 'consumidor': 'Consumer',
+        'investigativa': 'Research', 'aplicada': 'Applied', 'aplicado': 'Applied', 'avanzada': 'Advanced',
+        'avanzado': 'Advanced', 'basica': 'Basic', 'basico': 'Basic'
+      };
+
+      if (!/[A-Z]/.test(translated)) {
+        translated = translated.split(/\s+/).map(word => wordMap[word] || word).join(' ');
+      } else {
+        translated = translated.split(/\s+/).map(word => {
+          const lower = normalizeTranslationKey(word);
+          return wordMap[lower] || word;
+        }).join(' ');
+      }
+
+      translated = translated
+        .replace(/\b(i{1,3}|iv|v|vi|vii|viii|ix|x)\b/gi, match => match.toUpperCase())
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return translated.replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    async function translateSubjectToEnglish(value) {
+      const original = String(value || '').trim();
+      if (!original) return 'Academic Subject';
+
+      const key = normalizeTranslationKey(original);
+      const cache = getTranslationCache();
+      if (cache[key]) return cache[key];
+      if (localSubjectTranslations[key]) {
+        cache[key] = localSubjectTranslations[key];
+        saveTranslationCache(cache);
+        return cache[key];
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4500);
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(original)}&langpair=es|en`;
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error('Translation service unavailable');
+        const data = await response.json();
+        const translated = String(data?.responseData?.translatedText || '').trim();
+        if (translated && translated.toLowerCase() !== original.toLowerCase()) {
+          cache[key] = translated;
+          saveTranslationCache(cache);
+          return translated;
+        }
+      } catch (error) {
+        console.warn('Online translation unavailable; using local translation fallback.', error);
+      }
+
+      const fallback = fallbackTranslateSubject(original);
+      cache[key] = fallback;
+      saveTranslationCache(cache);
+      return fallback;
     }
 
     function buildRenderLogicText(selectedRuleIds) {
-      const selectedLabels = renderRules.filter(rule => selectedRuleIds.includes(rule.id) && rule.id !== 'avoid_unreadable_text').map(rule => rule.promptLabel.toLowerCase());
-      if (!selectedLabels.length) return 'Avoid common generation artifacts and preserve professional realism.';
-      return `Avoid common generation artifacts such as ${selectedLabels.join(', ')}, while preserving professional realism and anatomical accuracy.`;
+      const selectedLabels = renderRules
+        .filter(rule => selectedRuleIds.includes(rule.id) && rule.id !== 'avoid_unreadable_text')
+        .map(rule => rule.promptLabel.toLowerCase());
+      if (!selectedLabels.length) {
+        return 'Avoid common generation artifacts and preserve professional realism, anatomical accuracy, and visual coherence.';
+      }
+      return `Avoid common generation artifacts such as ${selectedLabels.join(', ')}, while preserving professional realism, anatomical accuracy, and visual coherence.`;
     }
 
     function getFacialAppearanceDescriptor(nationality) {
-      return 'an authentic Latin American professional appearance, natural facial proportions, medium warm skin tone, and non-caricatured realism';
+      const latinAmericanSet = ['bolivian', 'peruvian', 'argentinian', 'chilean', 'colombian', 'ecuadorian', 'brazilian', 'paraguayan', 'latin_american'];
+      if (nationality === 'mexican') {
+        return 'an authentic Mexican appearance, natural facial proportions, a medium warm skin tone, nuanced features, and non-caricatured realism';
+      }
+      if (nationality === 'brazilian') {
+        return 'an authentic Brazilian appearance, natural facial proportions, realistic skin tone variation, nuanced features, and non-caricatured realism';
+      }
+      if (nationality === 'paraguayan') {
+        return 'an authentic Paraguayan appearance, natural facial proportions, a medium warm skin tone, nuanced features, and non-caricatured realism';
+      }
+      if (latinAmericanSet.includes(nationality)) {
+        return 'an authentic Latin American appearance, natural facial proportions, a medium warm skin tone, nuanced features, and non-caricatured realism';
+      }
+      return 'an authentic contemporary professional appearance, natural facial proportions, realistic skin tone variation, nuanced features, and non-caricatured realism';
     }
 
-    function getTeamCountNarrative(count) {
-      const num = parseInt(count, 10) || 4;
-      return `a collaborative diverse team of ${num} professionals`;
+    function resolvePromptValues(card, values) {
+      return {
+        ...values,
+        environment: values.environment && values.environment !== 'auto' ? values.environment : (card.defaultEnvironment || 'auto'),
+        device: values.device && values.device !== 'auto' ? values.device : (card.defaultDevice || 'auto'),
+        composition: values.composition && values.composition !== 'auto' ? values.composition : (card.defaultComposition || 'auto'),
+        tools: values.tools && values.tools !== 'auto' ? values.tools : (card.defaultTools || 'auto')
+      };
+    }
+
+    function getPrimaryFocusObject(deviceValue, toolsValue) {
+      const focusMap = {
+        laptop: 'an open laptop on the desk',
+        desktop: 'a desktop monitor and workstation in front of the subject',
+        tablet: 'a tablet held or placed naturally in front of the subject',
+        smartphone: 'a smartphone in active use',
+        papers: 'printed papers, forms, or written materials on the desk',
+        notebook: 'a notebook or handwritten work materials',
+        auto: 'the main work or study object placed in front of the subject'
+      };
+      if (focusMap[deviceValue]) return focusMap[deviceValue];
+      if (toolsValue === 'research_materials') return 'research papers, notes, or academic reference materials';
+      if (toolsValue === 'presentation_tools') return 'shared presentation materials or professional work documents';
+      return 'the main work or study object placed in front of the subject';
+    }
+
+    function buildInteractionRule(card, resolvedValues, focusObject) {
+      const teamScene = card.defaultSubject === 'small_team';
+      if (teamScene) {
+        return `No participant looks at the camera. Every participant must focus naturally on ${focusObject}, on shared work materials, or on the group discussion, with believable interaction and ergonomic posture. The team must look diverse and clearly non-repetitive, with visually distinct individuals rather than similar-looking copies.`;
+      }
+      return `The protagonist must not look at the camera. The gaze, head direction, hands, and posture must align naturally with ${focusObject}.`;
     }
 
     async function buildPrompt(cardKey) {
@@ -1132,86 +1606,82 @@
       const selectedRules = getSelectedRenderRules();
 
       const card = HITO_CONFIGS.find(item => item.key === cardKey);
-      if (!card) return '';
-
       const { domain, profile } = inferDisciplineContext(subjectNameOriginal, careerCode);
       const professionValue = professionSelect === 'auto' ? autoProfession(subjectNameOriginal, careerCode) : professionSelect;
       const professionLabel = formatProfessionPrompt(professionValue);
       const nationalityLabel = nationalityNarrative(nationality);
       const promptCareerLabel = careerLabelPrompt(careerCode);
+      const promptSubtitle = getPromptSubtitle(card.key);
+      const domainPromptLabel = getDomainPromptLabel(domain);
 
       const values = {};
       Object.keys(fieldLabels).forEach(field => {
         const el = document.getElementById(`${cardKey}-${field}`);
-        if (el) values[field] = el.value;
+        values[field] = el ? el.value : 'auto';
       });
       const defaults = getDefaultFieldValues(card);
       const mergedValues = { ...defaults, ...values };
+      if (card.key === 'tar_hito5' || card.key === 'banner_h5') {
+        const selectedGroupCount = document.getElementById(`${card.key}-groupCount`);
+        if (selectedGroupCount && selectedGroupCount.value) {
+          mergedValues.groupCount = selectedGroupCount.value;
+        }
+      }
+      if (card.key === 'tar_hito5') {
+        mergedValues.gender = 'mixed_group';
+      }
+      const resolvedValues = resolvePromptValues(card, mergedValues);
+      const focusObject = getPrimaryFocusObject(resolvedValues.device, resolvedValues.tools);
+      const subjectNarrative = card.key === 'tar_hito5' ? getTeamCountNarrative(resolvedValues.groupCount) : optionToNarrative('subject', card.defaultSubject, domain);
+      const genderNarrative = optionToNarrative('gender', resolvedValues.gender, domain);
+      const ageNarrative = optionToNarrative('ageRange', resolvedValues.ageRange, domain);
+      const facialNarrative = optionToNarrative('facialStyle', resolvedValues.facialStyle, domain);
+      const businessNarrative = optionToNarrative('businessStyle', resolvedValues.businessStyle, domain);
+      const environmentNarrative = optionToNarrative('environment', resolvedValues.environment, domain);
+      const lightNarrative = optionToNarrative('light', resolvedValues.light, domain);
+      const deviceNarrative = optionToNarrative('device', resolvedValues.device, domain);
+      const cameraNarrative = optionToNarrative('cameraAngle', resolvedValues.cameraAngle, domain);
+      const compositionNarrative = optionToNarrative('composition', resolvedValues.composition, domain);
+      const toolsNarrative = optionToNarrative('tools', resolvedValues.tools, domain);
+      const interactionRule = buildInteractionRule(card, resolvedValues, focusObject);
+      const appearanceDescriptor = getFacialAppearanceDescriptor(nationality);
 
-      const subjectNarrative = card.key === 'tar_hito5' ? getTeamCountNarrative(mergedValues.groupCount) : optionToNarrative('subject', card.defaultSubject, domain);
-      const genderNarrative = optionToNarrative('gender', mergedValues.gender, domain);
-      const ageNarrative = optionToNarrative('ageRange', mergedValues.ageRange, domain);
+      const appearanceParts = [
+       `hairstyle ${getAppearancePromptValue('hairStyle', resolvedValues.hairStyle)}`,
+        resolvedValues.gender === 'man' && resolvedValues.facialHair ? `facial hair ${getAppearancePromptValue('facialHair', resolvedValues.facialHair)}` : '',
+       `accessory ${getAppearancePromptValue('accessory', resolvedValues.accessory)}`,
+       `clothing type ${getAppearancePromptValue('clothingType', resolvedValues.clothingType)}`,
+       `clothing color ${getAppearancePromptValue('clothingColor', resolvedValues.clothingColor)}`
+      ].filter(Boolean).join(', ');
 
-      const promptParts = [
-        `Create a hyper-realistic academic corporate editorial image in horizontal 16:9 format for the ${card.title} block of "${subjectName}" in ${promptCareerLabel}.`,
-        `Show ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}.`,
-        `Portray a believable ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
-        `Set the action in ${optionToNarrative('environment', mergedValues.environment, domain)} with ${optionToNarrative('light', mergedValues.light, domain)}.`,
-        `Use ${optionToNarrative('device', mergedValues.device, domain)} as the active working setup.`,
-        `Frame with ${optionToNarrative('cameraAngle', mergedValues.cameraAngle, domain)} and ${optionToNarrative('composition', mergedValues.composition, domain)}.`,
-        `Do not render any readable text, logos, or captions.`,
-        buildRenderLogicText(selectedRules)
-      ];
-
-      const prompt = promptParts.join(' ');
-      const outputEl = document.getElementById(`${cardKey}-output`);
-      if (outputEl) outputEl.value = prompt;
-      saveState();
-      return prompt;
-    }
-
-    async function buildBannerPrompt(cardKey) {
-      const subjectNameOriginal = document.getElementById('banner-subject-name').value.trim() || document.getElementById('subject-name').value.trim() || 'Academic subject';
-      const subjectName = await translateSubjectToEnglish(subjectNameOriginal);
-      const careerCode = document.getElementById('banner-career').value;
-      const professionSelect = document.getElementById('banner-profession-reference').value;
-      const nationality = document.getElementById('banner-nationality-context').value;
-      const selectedRules = getSelectedRenderRules();
-
-      const card = BANNER_CONFIGS.find(item => item.key === cardKey);
-      if (!card) return '';
-
-      const { domain, profile } = inferDisciplineContext(subjectNameOriginal, careerCode);
-      const professionValue = professionSelect === 'auto' ? autoProfession(subjectNameOriginal, careerCode) : professionSelect;
-      const professionLabel = formatProfessionPrompt(professionValue);
-      const nationalityLabel = nationalityNarrative(nationality);
-      const promptCareerLabel = careerLabelPrompt(careerCode);
-
-      const values = {};
-      Object.keys(fieldLabels).forEach(field => {
-        const el = document.getElementById(`${cardKey}-${field}`);
-        if (el) values[field] = el.value;
-      });
-      const defaults = getDefaultFieldValues(card);
-      const mergedValues = { ...defaults, ...values };
-
-      const subjectNarrative = card.key === 'banner_h5' ? getTeamCountNarrative(mergedValues.groupCount) : optionToNarrative('subject', card.defaultSubject, domain);
-      const genderNarrative = optionToNarrative('gender', mergedValues.gender, domain);
-      const ageNarrative = optionToNarrative('ageRange', mergedValues.ageRange, domain);
+      const sceneAction = profile && profile.phaseActions && profile.phaseActions[cardKey]
+        ? profile.phaseActions[cardKey]
+        : promptSubtitle.toLowerCase();
 
       const promptParts = [
-        `Create a high-impact horizontal banner image in 16:9 format for "${card.title}" in ${promptCareerLabel}, representing ${card.phase} of "${subjectName}".`,
-        `Portray ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}, with a ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
-        `Set in ${optionToNarrative('environment', mergedValues.environment, domain)} with ${optionToNarrative('light', mergedValues.light, domain)}.`,
-        `Use ${optionToNarrative('device', mergedValues.device, domain)} as the active working setup.`,
-        `Frame with ${optionToNarrative('cameraAngle', mergedValues.cameraAngle, domain)} and ${optionToNarrative('composition', mergedValues.composition, domain)}.`,
-        `Do not render any visible or readable text, logos, or typography.`,
+       `Create a hyper-realistic academic corporate editorial image in horizontal 16:9 format for the ${card.title} block of the subject "${subjectName}" in ${promptCareerLabel}.`,
+        card.key === 'tar_hito5'
+          ? `Show ${subjectNarrative} in the age range of ${ageNarrative}, dressed in a professional and cohesive way suitable for a collaborative final integration scene.`
+          : `Show ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}, with ${facialNarrative}, ${businessNarrative}, and ${appearanceParts}.`,
+        card.key === 'tar_hito5'
+          ? `Give the group ${appearanceDescriptor}, realistic diversity, coordinated business-ready styling, and natural collaboration. Every person must look clearly different from the others, with distinct facial features, hairstyles, ages, skin tone variation, and body language. Avoid repeated faces, duplicated identities, or team members who look physically alike.`
+          : `Give the subject ${appearanceDescriptor}.`,
+       `Portray a believable ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
+       `The scene should clearly communicate ${sceneAction}.`,
+       `Set the action in ${environmentNarrative}, with ${lightNarrative}.`,
+       `Use ${focusObject} as the main point of attention, with ${deviceNarrative} as the active working setup.`,
+       `Frame the image with ${cameraNarrative} and ${compositionNarrative}.`,
+       `Include ${toolsNarrative} as supporting props integrated naturally into the scene.`,
+        interactionRule,
+       `Keep the scene natural, premium, and coherent, with accurate perspective, ergonomic body language, realistic hands, integrated props, and natural depth of field.`,
+       `Use super-real facial rendering, realistic skin microtexture, subtle asymmetry, authentic hair strands, and believable anatomy.`,
+       `Subtly evoke ${domainPromptLabel} through objects, environment, and activity.`,
+       `Do not render any readable text, titles, captions, labels, logos, brand names, watermarks, binder labels, interface text, graphic overlays, or decorative title panels anywhere in the image; screens, papers, binders, and devices may show only abstract or blurred non-readable shapes.`,
         buildRenderLogicText(selectedRules)
-      ];
+      ].filter(Boolean);
 
       const prompt = promptParts.join(' ');
-      const outputEl = document.getElementById(`${cardKey}-output`);
-      if (outputEl) outputEl.value = prompt;
+      document.getElementById(`${cardKey}-output`).value = prompt;
       saveState();
       return prompt;
     }
@@ -1252,376 +1722,752 @@
       const select = document.createElement('select');
       select.id = `${cardKey}-${field}`;
       select.className = 'form-select';
-      
-      const isDynamicAppearance = ['hairStyle', 'facialHair', 'accessory', 'clothingType'].includes(field);
-      
-      if (isDynamicAppearance) {
-        const opts = getDynamicFieldOptions(field, cardKey);
-        populateSelectOptions(select, opts, defaultValue);
-      } else if (field === 'groupCount') {
-        const opts = [
-          { val: '2', display: '2 personas' },
-          { val: '3', display: '3 personas' },
-          { val: '4', display: '4 personas' },
-          { val: '5', display: '5 personas' },
-          { val: '6', display: '6 personas o más' }
-        ];
-        populateSelectOptions(select, opts, defaultValue || '4');
-      } else {
-        const list = optionSets[field] || [];
-        populateSelectOptions(select, list.map(item => ({ val: item[0], display: item[1] })), defaultValue);
-      }
-
+      const isDynamicAppearanceField = ['hairStyle', 'facialHair', 'accessory', 'clothingType', 'clothingColor'].includes(field);
+      const options = isDynamicAppearanceField
+        ? getDynamicFieldOptions(field, cardKey)
+        : (optionSets[field] || []).map(([value, label]) => ({ val: value, display: label }));
+      populateSelectOptions(select, options, defaultValue);
       select.addEventListener('change', () => {
-        if (field === 'gender' || field === 'clothingType') {
-          refreshAppearanceFields(cardKey);
+        if (field === 'gender') {
+          const preserved = {
+            hairStyle: document.getElementById(`${cardKey}-hairStyle`)?.value,
+            facialHair: document.getElementById(`${cardKey}-facialHair`)?.value,
+            accessory: document.getElementById(`${cardKey}-accessory`)?.value,
+            clothingType: document.getElementById(`${cardKey}-clothingType`)?.value,
+            clothingColor: document.getElementById(`${cardKey}-clothingColor`)?.value
+          };
+          refreshAppearanceFields(cardKey, preserved);
+          updateGenderSpecificFieldVisibility(cardKey);
+          updateColorPreview(cardKey);
+        } else if (field === 'clothingType') {
+          refreshAppearanceFields(cardKey, {
+            hairStyle: document.getElementById(`${cardKey}-hairStyle`)?.value,
+            facialHair: document.getElementById(`${cardKey}-facialHair`)?.value,
+            accessory: document.getElementById(`${cardKey}-accessory`)?.value,
+            clothingType: select.value,
+            clothingColor: document.getElementById(`${cardKey}-clothingColor`)?.value
+          });
+          updateColorPreview(cardKey);
         }
-        updateGenderSpecificFieldVisibility(cardKey);
         saveState();
       });
       return select;
     }
 
-    function renderCard(card) {
-      const container = document.createElement('div');
-      container.className = 'prompt-card p-5 flex flex-col justify-between';
-      
-      const headerHTML = `
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-1">
-            <h3 class="text-xl font-extrabold text-white">${card.title}</h3>
-            <span class="badge"><i class="fa-solid fa-layer-group"></i> ${card.phase}</span>
+
+    function getVisibleFieldsForCard(cardKey) {
+      if (cardKey === 'tar_hito5' || cardKey === 'banner_h5') {
+        return ['groupCount', 'ageRange', 'light', 'cameraAngle', 'tools'];
+      }
+      return Object.keys(fieldLabels).filter(field => field !== 'groupCount');
+    }
+
+    function getTeamCountNarrative(value) {
+      const map = {
+        '2': 'a collaborative pair of two professionals',
+        '3': 'a team of three professionals',
+        '4': 'a team of four professionals',
+        '5': 'a team of five professionals',
+        '6': 'a group of six or more professionals'
+      };
+      return map[value] || 'a small collaborative team';
+    }
+
+    function buildPromptCards() {
+
+      const container = document.getElementById('prompt-cards');
+      container.innerHTML = '';
+      HITO_CONFIGS.forEach(card => {
+        const article = document.createElement('article');
+        article.className = 'prompt-card p-5 md:p-6';
+        article.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
+            <div>
+              <div class="badge mb-3"><i class="fa-solid fa-layer-group"></i>${card.title}</div>
+              <h3 class="text-xl md:text-2xl font-extrabold text-white">${card.phase}</h3>
+              <p class="helper mt-2 max-w-2xl">${card.subtitle}</p>
+            </div>
           </div>
-          <p class="helper">${card.subtitle}</p>
-        </div>
-      `;
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5" id="${card.key}-fields"></div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-action="generate-one" data-card="${card.key}"><i class="fa-solid fa-sparkles"></i>Generar</button>
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-action="copy-one" data-card="${card.key}"><i class="fa-solid fa-copy"></i>Copiar</button>
+            <button class="secondary-btn danger-btn !py-2 !px-3 text-sm" data-action="reset-one" data-card="${card.key}"><i class="fa-solid fa-rotate-left"></i>Restablecer</button>
+          </div>
+          <div>
+            <label class="label" for="${card.key}-output">Prompt generado</label>
+            <textarea id="${card.key}-output" class="form-textarea mono" placeholder="Aquí aparecerá el prompt de ${card.title}..."></textarea>
+          </div>
+       `;
+        container.appendChild(article);
+
+        const fieldsGrid = article.querySelector(`#${card.key}-fields`);
+        const defaults = getDefaultFieldValues(card);
+
+        getVisibleFieldsForCard(card.key).forEach(field => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'glass-soft rounded-2xl p-4';
+          wrapper.dataset.fieldWrapper = `${card.key}-${field}`;
+          const label = document.createElement('label');
+          label.className = 'label';
+          label.textContent = fieldLabels[field];
+          label.setAttribute('for', `${card.key}-${field}`);
+          wrapper.appendChild(label);
+          wrapper.appendChild(field === 'clothingColor' ? createColorPreviewControl(card.key, defaults[field]) : createSelect(field, card.key, defaults[field]));
+          fieldsGrid.appendChild(wrapper);
+        });
+        if (card.key !== 'tar_hito5') {
+          refreshAppearanceFields(card.key, defaults);
+          updateGenderSpecificFieldVisibility(card.key);
+          updateColorPreview(card.key);
+        }
+      });
+    }
+
+
+    function buildBannerProfessionSelect() {
+      const select = document.getElementById('banner-profession-reference');
+      if (!select) return;
+      select.innerHTML = '';
+      professionOptions.common.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        select.appendChild(option);
+      });
+    }
+
+    function getBannerGeneralValues() {
+      return {
+        subjectNameOriginal: document.getElementById('banner-subject-name')?.value.trim() || document.getElementById('subject-name')?.value.trim() || 'Academic subject',
+        careerCode: document.getElementById('banner-career')?.value || document.getElementById('career')?.value || 'OTHER',
+        professionSelect: document.getElementById('banner-profession-reference')?.value || 'auto',
+        nationality: document.getElementById('banner-nationality-context')?.value || document.getElementById('nationality-context')?.value || 'latin_american'
+      };
+    }
+
+    function getBannerSceneAction(card, profile) {
+      const actionMap = {
+        banner_h1: profile.phaseActions.tar_hito1,
+        banner_h2: profile.phaseActions.tar_hito2,
+        banner_h3: profile.phaseActions.tar_hito3,
+        banner_h4: profile.phaseActions.tar_hito4,
+        banner_h5: profile.phaseActions.tar_hito5,
+        aes_311_com_docente: 'a faculty mentor communicating guidance and academic support through a professional digital workspace',
+        banner_aplic_s01: 'applying the central concepts of the subject to a realistic professional task',
+        banner_plan_s01: 'planning, organizing, and structuring an academic or professional activity',
+        banner_gam_s01: 'interacting with an engaging learning activity through a digital device',
+        banner_afi_s01: 'reinforcing knowledge through focused review and guided practice',
+        banner_cont_s01: 'studying the core academic content of the subject in a focused professional setting',
+        banner_reflex_s01: 'reflecting carefully on a meaningful question related to the subject',
+        banner_proyecto_s01: 'developing a practical project connected to the subject',
+        banner_foro_s01: 'participating thoughtfully in an online academic discussion forum'
+      };
+      return actionMap[card.key] || 'working on a meaningful academic activity related to the subject';
+    }
+
+    async function buildBannerPrompt(cardKey) {
+      const card = BANNER_CONFIGS.find(item => item.key === cardKey);
+      if (!card) return '';
+      const general = getBannerGeneralValues();
+      const subjectName = await translateSubjectToEnglish(general.subjectNameOriginal);
+      const { domain, profile } = inferDisciplineContext(general.subjectNameOriginal, general.careerCode);
+      const professionValue = general.professionSelect === 'auto' ? autoProfession(general.subjectNameOriginal, general.careerCode) : general.professionSelect;
+      const professionLabel = formatProfessionPrompt(professionValue);
+      const nationalityLabel = nationalityNarrative(general.nationality);
+      const promptCareerLabel = careerLabelPrompt(general.careerCode);
+      const appearanceDescriptor = getFacialAppearanceDescriptor(general.nationality);
+      const selectedRules = getSelectedRenderRules();
 
       const defaults = getDefaultFieldValues(card);
-      const fieldsGrid = document.createElement('div');
-      fieldsGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4';
-
-      const fieldsToRender = ['gender', 'light', 'environment', 'device', 'cameraAngle', 'composition', 'ageRange', 'tools', 'facialStyle', 'hairStyle', 'facialHair', 'accessory', 'clothingType', 'clothingColor'];
-      if (card.key === 'tar_hito5') fieldsToRender.splice(7, 0, 'groupCount');
-
-      fieldsToRender.forEach(field => {
-        const wrapper = document.createElement('div');
-        wrapper.setAttribute('data-field-wrapper', `${card.key}-${field}`);
-        const label = document.createElement('label');
-        label.className = 'label';
-        label.textContent = fieldLabels[field] || field;
-        wrapper.appendChild(label);
-
-        if (field === 'clothingColor') {
-          wrapper.appendChild(createColorPreviewControl(card.key, defaults[field]));
-        } else {
-          wrapper.appendChild(createSelect(field, card.key, defaults[field]));
-        }
-        fieldsGrid.appendChild(wrapper);
+      const values = {};
+      Object.keys(fieldLabels).forEach(field => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        values[field] = el ? el.value : defaults[field];
       });
+      const mergedValues = { ...defaults, ...values };
+      if (card.key === 'tar_hito5' || card.key === 'banner_h5') {
+        const selectedGroupCount = document.getElementById(`${card.key}-groupCount`);
+        if (selectedGroupCount && selectedGroupCount.value) {
+          mergedValues.groupCount = selectedGroupCount.value;
+        }
+      }
+      if (card.key === 'banner_h5') mergedValues.gender = 'mixed_group';
+      const resolved = resolvePromptValues(card, mergedValues);
+      const focusObject = getPrimaryFocusObject(resolved.device, resolved.tools);
+      const teamScene = card.key === 'banner_h5';
+      const subjectNarrative = teamScene ? getTeamCountNarrative(resolved.groupCount || '4') : optionToNarrative('subject', card.defaultSubject, domain);
+      const genderNarrative = optionToNarrative('gender', resolved.gender, domain);
+      const ageNarrative = optionToNarrative('ageRange', resolved.ageRange, domain);
+      const environmentNarrative = optionToNarrative('environment', resolved.environment, domain);
+      const lightNarrative = optionToNarrative('light', resolved.light, domain);
+      const cameraNarrative = optionToNarrative('cameraAngle', resolved.cameraAngle, domain);
+      const compositionNarrative = optionToNarrative('composition', resolved.composition, domain);
+      const toolsNarrative = optionToNarrative('tools', resolved.tools, domain);
+      const deviceNarrative = optionToNarrative('device', resolved.device, domain);
 
-      const actionsHTML = `
-        <div class="space-y-3 mt-4">
-          <textarea id="${card.key}-output" class="form-textarea mono text-xs" readonly placeholder="El prompt generado aparecerá aquí..."></textarea>
-          <div class="flex flex-wrap gap-2">
-            <button onclick="buildPrompt('${card.key}')" class="primary-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-wand-magic-sparkles"></i>Generar</button>
-            <button onclick="copySingle('${card.key}')" class="secondary-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-copy"></i>Copiar</button>
-            <button onclick="resetCard('${card.key}')" class="secondary-btn danger-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-rotate-left"></i>Restablecer</button>
-          </div>
-        </div>
-      `;
+      const appearanceParts = teamScene ? '' : [
+       `hairstyle ${getAppearancePromptValue('hairStyle', resolved.hairStyle)}`,
+        resolved.gender === 'man' && resolved.facialHair ? `facial hair ${getAppearancePromptValue('facialHair', resolved.facialHair)}` : '',
+       `accessory ${getAppearancePromptValue('accessory', resolved.accessory)}`,
+       `clothing type ${getAppearancePromptValue('clothingType', resolved.clothingType)}`,
+       `clothing color ${getAppearancePromptValue('clothingColor', resolved.clothingColor)}`
+      ].filter(Boolean).join(', ');
 
-      container.innerHTML = headerHTML;
-      container.appendChild(fieldsGrid);
-      container.insertAdjacentHTML('beforeend', actionsHTML);
+      const promptParts = [
+       `Subject: "${subjectName}". Faculty / career: ${promptCareerLabel}.`,
+        teamScene
+          ? `Show a team of ${resolved.groupCount || '4'} people in the professional age range of ${ageNarrative}, collaborating naturally in a final integration activity. Every person must look physically distinct, with different facial structures, hairstyles, skin tone variation, and body language.`
+          : `Show ${subjectNarrative} as ${genderNarrative}, in the age range of ${ageNarrative}, with ${appearanceDescriptor} and ${appearanceParts}.`,
+       `Portray a believable ${nationalityLabel.toLowerCase()} professional context inspired by a ${professionLabel.toLowerCase()}.`,
+       `The scene should communicate ${getBannerSceneAction(card, profile)}.`,
+       `Set the action in ${environmentNarrative}, with ${lightNarrative}.`,
+       `Use ${focusObject} as the main point of attention, supported by ${deviceNarrative} and ${toolsNarrative}.`,
+       `Use ${cameraNarrative} and ${compositionNarrative}, cropped naturally for a thin panoramic banner.`,
+        teamScene
+          ? `No participant looks at the camera. All participants focus on shared materials, screens, or the group discussion. Avoid repeated faces or similar-looking people.`
+          : `The subject must not look at the camera. The gaze, head direction, hands, and posture must align naturally with the active work object.`,
+       `Keep the left side free of people, objects, titles, logos, labels, and readable text, but preserve subtle environmental depth, soft tonal continuity, and realistic background context. `,
+       `Use super-real facial rendering, realistic skin microtexture, subtle asymmetry, authentic hair strands, accurate anatomy, realistic hands, coherent lighting, and natural depth of field.`,
+       `Do not render readable text, watermarks, logos, brand names, labels, interface text, decorative panels, graphic overlays, white halos, white fog effects, or washed-out glow anywhere in the image.`,
+        buildRenderLogicText(selectedRules)
+      ];
 
-      setTimeout(() => updateGenderSpecificFieldVisibility(card.key), 0);
-      return container;
+      const prompt = promptParts.filter(Boolean).join(' ');
+      const output = document.getElementById(`${cardKey}-output`);
+      if (output) output.value = prompt;
+      saveState();
+      return prompt;
     }
 
-    function renderBannerCard(card) {
-      const container = document.createElement('div');
-      container.className = 'prompt-card p-5 flex flex-col justify-between mb-5';
+    function buildBannerCards() {
+      const left = document.getElementById('banner-left-cards');
+      const right = document.getElementById('banner-right-cards');
+      if (!left || !right) return;
+      left.innerHTML = '';
+      right.innerHTML = '';
 
-      const headerHTML = `
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-1">
-            <h3 class="text-xl font-extrabold text-white">${card.title}</h3>
-            <span class="badge"><i class="fa-solid fa-image"></i> ${card.phase}</span>
+      BANNER_CONFIGS.forEach(card => {
+        const article = document.createElement('article');
+        article.className = 'prompt-card p-5 md:p-6';
+        article.innerHTML = `
+          <div class="mb-5">
+            <div class="badge mb-3"><i class="fa-solid fa-panorama"></i>${card.title}</div>
+            <h3 class="text-xl font-extrabold text-white">${card.phase}</h3>
+            <p class="helper mt-2">${card.subtitle}</p>
           </div>
-          <p class="helper">${card.subtitle}</p>
-        </div>
-      `;
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5" id="${card.key}-fields"></div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-banner-action="generate-one" data-banner-card="${card.key}"><i class="fa-solid fa-sparkles"></i>Generar</button>
+            <button class="secondary-btn !py-2 !px-3 text-sm" data-banner-action="copy-one" data-banner-card="${card.key}"><i class="fa-solid fa-copy"></i>Copiar</button>
+            <button class="secondary-btn danger-btn !py-2 !px-3 text-sm" data-banner-action="reset-one" data-banner-card="${card.key}"><i class="fa-solid fa-rotate-left"></i>Restablecer</button>
+          </div>
+          <div>
+            <label class="label" for="${card.key}-output">Prompt generado</label>
+            <textarea id="${card.key}-output" class="form-textarea mono" placeholder="Aquí aparecerá el prompt de ${card.title}..."></textarea>
+          </div>
+       `;
+        (card.side === 'left' ? left : right).appendChild(article);
 
+        const fieldsGrid = article.querySelector(`#${card.key}-fields`);
+        const defaults = getDefaultFieldValues(card);
+        getVisibleFieldsForCard(card.key).forEach(field => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'glass-soft rounded-2xl p-4';
+          wrapper.dataset.fieldWrapper = `${card.key}-${field}`;
+          const label = document.createElement('label');
+          label.className = 'label';
+          label.textContent = fieldLabels[field];
+          label.setAttribute('for', `${card.key}-${field}`);
+          wrapper.appendChild(label);
+          wrapper.appendChild(field === 'clothingColor' ? createColorPreviewControl(card.key, defaults[field]) : createSelect(field, card.key, defaults[field]));
+          fieldsGrid.appendChild(wrapper);
+        });
+        if (card.key !== 'banner_h5') {
+          refreshAppearanceFields(card.key, defaults);
+          updateGenderSpecificFieldVisibility(card.key);
+          updateColorPreview(card.key);
+        }
+      });
+    }
+
+    function autofillBannerSuggestions() {
+      const subjectName = document.getElementById('banner-subject-name').value.trim();
+      const careerCode = document.getElementById('banner-career').value;
+      const { domain, profile } = inferDisciplineContext(subjectName, careerCode);
+
+      BANNER_CONFIGS.forEach(card => {
+        const envEl = document.getElementById(`${card.key}-environment`);
+        const devEl = document.getElementById(`${card.key}-device`);
+        const toolEl = document.getElementById(`${card.key}-tools`);
+        if (envEl && envEl.value === 'auto') envEl.value = profile.environments[0] || 'executive_office';
+        if (devEl && devEl.value === 'auto') devEl.value = profile.devices[0] || 'laptop';
+        if (toolEl && toolEl.value === 'auto') toolEl.value = profile.tools[0] || 'notebook_basic';
+      });
+
+      saveState();
+      toast('Se aplicaron sugerencias automáticas a los banners.');
+    }
+
+    async function generateAllBannerPrompts() {
+      await Promise.all(BANNER_CONFIGS.map(card => buildBannerPrompt(card.key)));
+      toast('Se generaron los 14 prompts de banners completamente en inglés.');
+    }
+
+    async function copyAllBannerPrompts() {
+      const text = BANNER_CONFIGS.map(card => `${card.title.toUpperCase()}\n${document.getElementById(`${card.key}-output`)?.value.trim() || ''}`)
+        .join('\n\n------------------------------\n\n');
+      if (!text.replace(/[-\s]/g, '')) {
+        toast('Primero genera los prompts de banners.', 'warning');
+        return;
+      }
+      await copyText(text);
+      toast('Todos los prompts de banners fueron copiados.');
+    }
+
+    function resetBannerCard(cardKey) {
+      const card = BANNER_CONFIGS.find(item => item.key === cardKey);
+      if (!card) return;
       const defaults = getDefaultFieldValues(card);
-      const fieldsGrid = document.createElement('div');
-      fieldsGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4';
-
-      const fieldsToRender = ['gender', 'light', 'environment', 'device', 'cameraAngle', 'composition', 'ageRange', 'tools', 'facialStyle', 'hairStyle', 'facialHair', 'accessory', 'clothingType', 'clothingColor'];
-      if (card.key === 'banner_h5') fieldsToRender.splice(7, 0, 'groupCount');
-
-      fieldsToRender.forEach(field => {
-        const wrapper = document.createElement('div');
-        wrapper.setAttribute('data-field-wrapper', `${card.key}-${field}`);
-        const label = document.createElement('label');
-        label.className = 'label';
-        label.textContent = fieldLabels[field] || field;
-        wrapper.appendChild(label);
-
-        if (field === 'clothingColor') {
-          wrapper.appendChild(createColorPreviewControl(card.key, defaults[field]));
-        } else {
-          wrapper.appendChild(createSelect(field, card.key, defaults[field]));
-        }
-        fieldsGrid.appendChild(wrapper);
+      Object.entries(defaults).forEach(([field, value]) => {
+        const el = document.getElementById(`${cardKey}-${field}`);
+        if (el) el.value = value;
       });
-
-      const actionsHTML = `
-        <div class="space-y-3 mt-4">
-          <textarea id="${card.key}-output" class="form-textarea mono text-xs" readonly placeholder="El prompt de banner aparecerá aquí..."></textarea>
-          <div class="flex flex-wrap gap-2">
-            <button onclick="buildBannerPrompt('${card.key}')" class="primary-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-wand-magic-sparkles"></i>Generar Banner</button>
-            <button onclick="copySingle('${card.key}')" class="secondary-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-copy"></i>Copiar</button>
-            <button onclick="resetCard('${card.key}')" class="secondary-btn danger-btn !py-2 !px-3 text-xs"><i class="fa-solid fa-rotate-left"></i>Restablecer</button>
-          </div>
-        </div>
-      `;
-
-      container.innerHTML = headerHTML;
-      container.appendChild(fieldsGrid);
-      container.insertAdjacentHTML('beforeend', actionsHTML);
-
-      setTimeout(() => updateGenderSpecificFieldVisibility(card.key), 0);
-      return container;
+      if (card.key !== 'banner_h5') {
+        refreshAppearanceFields(cardKey, defaults);
+        updateGenderSpecificFieldVisibility(cardKey);
+        updateColorPreview(cardKey);
+      }
+      const output = document.getElementById(`${cardKey}-output`);
+      if (output) output.value = '';
+      saveState();
     }
 
-    function showToast(message) {
-      const container = document.getElementById('app-toast-container');
-      const toast = document.createElement('div');
-      toast.className = 'toast flex items-center gap-3';
-      toast.innerHTML = `<i class="fa-solid fa-circle-check text-sky-400"></i><span>${message}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 2800);
+    function resetAllCards() {
+      HITO_CONFIGS.forEach(card => resetCard(card.key, true));
+      saveState();
+      toast('Todas las tarjetas de Hitos fueron restablecidas.');
     }
 
-    function copySingle(cardKey) {
-      const txt = document.getElementById(`${cardKey}-output`)?.value;
-      if (!txt) return;
-      copyToClipboard(txt);
-      showToast('Prompt copiado al portapapeles');
+    function resetAllBannerCards() {
+      BANNER_CONFIGS.forEach(card => resetBannerCard(card.key));
+      saveState();
+      toast('Todas las tarjetas de Banners fueron restablecidas.');
     }
 
-    function copyToClipboard(text) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text);
-      } else {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
+    function syncBannerGeneralFromHitos() {
+      document.getElementById('banner-subject-name').value = document.getElementById('subject-name').value;
+      document.getElementById('banner-career').value = document.getElementById('career').value;
+      document.getElementById('banner-profession-reference').value = document.getElementById('profession-reference').value;
+      document.getElementById('banner-nationality-context').value = document.getElementById('nationality-context').value;
+      saveState();
+      toast('Configuración general copiada desde Generador Hitos.');
+    }
+
+    function buildProfessionSelect() {
+      const select = document.getElementById('profession-reference');
+      select.innerHTML = '';
+      professionOptions.common.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        select.appendChild(option);
+      });
+    }
+
+    function buildRenderRules() {
+      const container = document.getElementById('render-rules-container');
+      container.innerHTML = '';
+      renderRules.forEach(rule => {
+        const label = document.createElement('label');
+        label.className = 'chip';
+        label.innerHTML = `<input type="checkbox" data-rule-id="${rule.id}" checked> <span>${rule.label}</span>`;
+        label.querySelector('input').addEventListener('change', saveState);
+        container.appendChild(label);
+      });
+    }
+
+    function getSelectedRenderRules() {
+      return Array.from(document.querySelectorAll('#render-rules-container input[type="checkbox"]:checked')).map(input => input.dataset.ruleId);
+    }
+
+    async function generateAllPrompts(showToast = true) {
+      const prompts = await Promise.all(HITO_CONFIGS.map(card => buildPrompt(card.key)));
+      if (showToast) toast('Se generaron los 6 prompts completamente en inglés.');
+      return prompts;
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        textarea.remove();
+        return true;
       }
     }
 
-    function resetCard(cardKey) {
-      const card = HITO_CONFIGS.find(c => c.key === cardKey) || BANNER_CONFIGS.find(c => c.key === cardKey);
+    async function copyAllPrompts() {
+      const allText = HITO_CONFIGS.map(card => {
+        const text = document.getElementById(`${card.key}-output`).value.trim();
+        return `${card.title.toUpperCase()}\n${text}`;
+      }).join('\n\n------------------------------\n\n');
+
+      if (!allText.replace(/[-\s]/g, '')) {
+        toast('Primero genera los prompts.', 'warning');
+        return;
+      }
+      await copyText(allText);
+      toast('Todos los prompts fueron copiados.');
+    }
+
+    async function copyOnePrompt(cardKey) {
+      const text = document.getElementById(`${cardKey}-output`).value.trim();
+      if (!text) {
+        toast('Ese prompt todavía está vacío.', 'warning');
+        return;
+      }
+      await copyText(text);
+      toast(`Prompt de ${cardKey} copiado.`);
+    }
+
+    function resetCard(cardKey, silent = false) {
+      const card = HITO_CONFIGS.find(item => item.key === cardKey);
       if (!card) return;
+
       const defaults = getDefaultFieldValues(card);
-      Object.keys(defaults).forEach(field => {
+      Object.entries(defaults).forEach(([field, value]) => {
         const el = document.getElementById(`${cardKey}-${field}`);
-        if (el) el.value = defaults[field];
+        if (el) el.value = value;
       });
       refreshAppearanceFields(cardKey, defaults);
-      const out = document.getElementById(`${cardKey}-output`);
-      if (out) out.value = '';
+      document.getElementById(`${cardKey}-output`).value = '';
       saveState();
-      showToast(`Tarjeta ${cardKey} restablecida`);
+      if (!silent) toast(`Tarjeta ${cardKey} restablecida.`);
+    }
+
+    function autofillSuggestions() {
+      const subjectName = document.getElementById('subject-name').value.trim();
+      const careerCode = document.getElementById('career').value;
+      const { domain, profile } = inferDisciplineContext(subjectName, careerCode);
+
+      if (document.getElementById('profession-reference').value === 'auto') {
+        document.getElementById('profession-reference').value = 'auto';
+      }
+
+      HITO_CONFIGS.forEach(card => {
+        const envEl = document.getElementById(`${card.key}-environment`);
+        const devEl = document.getElementById(`${card.key}-device`);
+        const toolEl = document.getElementById(`${card.key}-tools`);
+        const styleEl = document.getElementById(`${card.key}-businessStyle`);
+
+        if (envEl && envEl.value === 'auto') envEl.value = profile.environments[0] || 'executive_office';
+        if (devEl && devEl.value === 'auto') devEl.value = profile.devices[0] || 'laptop';
+        if (toolEl && toolEl.value === 'auto') toolEl.value = profile.tools[0] || 'notebook_basic';
+
+        if (styleEl && styleEl.value === 'smart_casual_premium') {
+          if (domain === 'law') styleEl.value = 'legal_classic';
+          else if (domain === 'marketing') styleEl.value = 'creative_professional';
+          else if (domain === 'accounting' || domain === 'business') styleEl.value = 'financial_sophisticated';
+          else if (domain === 'management') styleEl.value = 'executive_formal';
+        }
+      });
+
+      updateDetectedContext();
+      saveState();
+      toast('Se aplicaron sugerencias automáticas.');
+    }
+
+    function updateDetectedContext() {
+      const subjectName = document.getElementById('subject-name').value.trim();
+      const careerCode = document.getElementById('career').value;
+      const { domain, profile } = inferDisciplineContext(subjectName, careerCode);
+      const domainEl = document.getElementById('detected-domain');
+      const summaryEl = document.getElementById('detected-summary');
+      domainEl.textContent = `${profile.label} · ${careerLabel(careerCode)}`;
+      summaryEl.textContent = profile.autoSummary;
+
+      if (document.getElementById('profession-reference').value === 'auto') {
+        const autoValue = autoProfession(subjectName, careerCode);
+        document.getElementById('profession-reference').value = 'auto';
+        document.getElementById('profession-reference').dataset.autoResolved = autoValue;
+      }
     }
 
     function saveState() {
-      const data = {
-        subjectName: document.getElementById('subject-name')?.value || '',
-        career: document.getElementById('career')?.value || 'DER',
-        profession: document.getElementById('profession-reference')?.value || 'auto',
-        nationality: document.getElementById('nationality-context')?.value || 'bolivian',
+      const state = {
+        subjectName: document.getElementById('subject-name').value,
+        career: document.getElementById('career').value,
+        professionReference: document.getElementById('profession-reference').value,
+        nationalityContext: document.getElementById('nationality-context').value,
         bannerSubjectName: document.getElementById('banner-subject-name')?.value || '',
         bannerCareer: document.getElementById('banner-career')?.value || 'DER',
-        bannerProfession: document.getElementById('banner-profession-reference')?.value || 'auto',
-        bannerNationality: document.getElementById('banner-nationality-context')?.value || 'bolivian',
-        cards: {}
+        bannerProfessionReference: document.getElementById('banner-profession-reference')?.value || 'auto',
+        bannerNationalityContext: document.getElementById('banner-nationality-context')?.value || 'bolivian',
+        renderRules: getSelectedRenderRules(),
+        cards: {},
+        bannerCards: {}
       };
-
-      [...HITO_CONFIGS, ...BANNER_CONFIGS].forEach(card => {
-        const cardData = { output: document.getElementById(`${card.key}-output`)?.value || '' };
+      HITO_CONFIGS.forEach(card => {
+        state.cards[card.key] = {};
         Object.keys(fieldLabels).forEach(field => {
           const el = document.getElementById(`${card.key}-${field}`);
-          if (el) cardData[field] = el.value;
+          if (el) state.cards[card.key][field] = el.value;
         });
-        data.cards[card.key] = cardData;
+        state.cards[card.key].output = document.getElementById(`${card.key}-output`).value;
       });
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      BANNER_CONFIGS.forEach(card => {
+        state.bannerCards[card.key] = {};
+        Object.keys(fieldLabels).forEach(field => {
+          const el = document.getElementById(`${card.key}-${field}`);
+          if (el) state.bannerCards[card.key][field] = el.value;
+        });
+        state.bannerCards[card.key].output = document.getElementById(`${card.key}-output`)?.value || '';
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
     function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-
-        if (data.subjectName) document.getElementById('subject-name').value = data.subjectName;
-        if (data.career) document.getElementById('career').value = data.career;
-        if (data.profession) document.getElementById('profession-reference').value = data.profession;
-        if (data.nationality) document.getElementById('nationality-context').value = data.nationality;
-
-        if (data.bannerSubjectName) document.getElementById('banner-subject-name').value = data.bannerSubjectName;
-        if (data.bannerCareer) document.getElementById('banner-career').value = data.bannerCareer;
-        if (data.bannerProfession) document.getElementById('banner-profession-reference').value = data.bannerProfession;
-        if (data.bannerNationality) document.getElementById('banner-nationality-context').value = data.bannerNationality;
-
-        if (data.cards) {
-          Object.keys(data.cards).forEach(cardKey => {
-            const cardData = data.cards[cardKey];
-            Object.keys(cardData).forEach(field => {
-              if (field === 'output') {
-                const out = document.getElementById(`${cardKey}-output`);
-                if (out) out.value = cardData.output;
-              } else {
-                const el = document.getElementById(`${cardKey}-${field}`);
-                if (el) el.value = cardData[field];
-              }
-            });
-            refreshAppearanceFields(cardKey, cardData);
+        const state = JSON.parse(raw);
+        if (state.subjectName !== undefined) document.getElementById('subject-name').value = state.subjectName;
+        if (state.career) document.getElementById('career').value = state.career;
+        if (state.professionReference) document.getElementById('profession-reference').value = state.professionReference;
+        if (state.nationalityContext) document.getElementById('nationality-context').value = state.nationalityContext;
+        if (state.bannerSubjectName !== undefined) document.getElementById('banner-subject-name').value = state.bannerSubjectName;
+        if (state.bannerCareer) document.getElementById('banner-career').value = state.bannerCareer;
+        if (state.bannerProfessionReference) document.getElementById('banner-profession-reference').value = state.bannerProfessionReference;
+        if (state.bannerNationalityContext) document.getElementById('banner-nationality-context').value = state.bannerNationalityContext;
+        if (Array.isArray(state.renderRules)) {
+          document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => {
+            input.checked = state.renderRules.includes(input.dataset.ruleId);
           });
         }
-      } catch (e) {
-        console.error('Error loading stored state', e);
+        if (state.cards) {
+          HITO_CONFIGS.forEach(card => {
+            const cardState = state.cards[card.key];
+            if (!cardState) return;
+            const defaults = getDefaultFieldValues(card);
+            Object.keys(fieldLabels).forEach(field => {
+              if (cardState[field] !== undefined) {
+                const el = document.getElementById(`${card.key}-${field}`);
+                if (el) el.value = cardState[field];
+              } else if (defaults[field] !== undefined) {
+                const el = document.getElementById(`${card.key}-${field}`);
+                if (el) el.value = defaults[field];
+              }
+            });
+            refreshAppearanceFields(card.key, { ...defaults, ...cardState });
+            updateGenderSpecificFieldVisibility(card.key);
+            updateColorPreview(card.key);
+            if (cardState.output !== undefined) {
+              const outputEl = document.getElementById(`${card.key}-output`);
+              if (outputEl) outputEl.value = cardState.output;
+            }
+          });
+        }
+        if (state.bannerCards) {
+          BANNER_CONFIGS.forEach(card => {
+            const cardState = state.bannerCards[card.key];
+            if (!cardState) return;
+            const defaults = getDefaultFieldValues(card);
+            Object.keys(fieldLabels).forEach(field => {
+              const el = document.getElementById(`${card.key}-${field}`);
+              if (el) el.value = cardState[field] !== undefined ? cardState[field] : defaults[field];
+            });
+            if (card.key !== 'banner_h5') {
+              refreshAppearanceFields(card.key, { ...defaults, ...cardState });
+              updateGenderSpecificFieldVisibility(card.key);
+              updateColorPreview(card.key);
+            }
+            const output = document.getElementById(`${card.key}-output`);
+            if (output && cardState.output !== undefined) output.value = cardState.output;
+          });
+        }
+      } catch (err) {
+        console.error('No se pudo cargar el estado', err);
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Setup Render Rules Container
-      const rulesContainer = document.getElementById('render-rules-container');
-      renderRules.forEach(rule => {
-        const chip = document.createElement('label');
-        chip.className = 'chip';
-        chip.innerHTML = `<input type="checkbox" value="${rule.id}" checked /> <span>${rule.label}</span>`;
-        rulesContainer.appendChild(chip);
-      });
+    function resetApp() {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById('subject-name').value = '';
+      document.getElementById('career').value = 'DER';
+      document.getElementById('profession-reference').value = 'auto';
+      document.getElementById('nationality-context').value = 'bolivian';
+      document.getElementById('banner-subject-name').value = '';
+      document.getElementById('banner-career').value = 'DER';
+      document.getElementById('banner-profession-reference').value = 'auto';
+      document.getElementById('banner-nationality-context').value = 'bolivian';
+      document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => input.checked = true);
+      HITO_CONFIGS.forEach(card => resetCard(card.key, true));
+      BANNER_CONFIGS.forEach(card => resetBannerCard(card.key));
+      updateDetectedContext();
+      toast('Aplicación restablecida.');
+    }
 
-      // Populate Profession References
-      const profSelect = document.getElementById('profession-reference');
-      const bannerProfSelect = document.getElementById('banner-profession-reference');
-      professionOptions.common.forEach(opt => {
-        const o1 = document.createElement('option');
-        o1.value = opt.value;
-        o1.textContent = opt.label;
-        profSelect.appendChild(o1);
+    function toast(message, type = 'success') {
+      const container = document.getElementById('app-toast-container');
+      const div = document.createElement('div');
+      div.className = 'toast pointer-events-auto';
+      const icon = type === 'warning' ? 'triangle-exclamation' : type === 'error' ? 'circle-xmark' : 'circle-check';
+      div.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl ${type === 'warning' ? 'bg-amber-400/10 text-amber-300 border border-amber-400/20' : type === 'error' ? 'bg-rose-400/10 text-rose-300 border border-rose-400/20' : 'bg-emerald-400/10 text-emerald-300 border border-emerald-400/20'} flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-${icon}"></i>
+          </div>
+          <div class="text-sm leading-relaxed">${message}</div>
+        </div>
+     `;
+      container.appendChild(div);
+      setTimeout(() => {
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(-6px)';
+        div.style.transition = '.2s ease';
+        setTimeout(() => div.remove(), 220);
+      }, 2400);
+    }
 
-        const o2 = document.createElement('option');
-        o2.value = opt.value;
-        o2.textContent = opt.label;
-        bannerProfSelect.appendChild(o2);
-      });
-
-      // Render Hitos Cards
-      const hitosContainer = document.getElementById('prompt-cards');
-      HITO_CONFIGS.forEach(card => {
-        hitosContainer.appendChild(renderCard(card));
-      });
-
-      // Render Banner Cards
-      const bannerLeft = document.getElementById('banner-left-cards');
-      const bannerRight = document.getElementById('banner-right-cards');
-      BANNER_CONFIGS.forEach(card => {
-        if (card.side === 'left') {
-          bannerLeft.appendChild(renderBannerCard(card));
-        } else {
-          bannerRight.appendChild(renderBannerCard(card));
-        }
-      });
-
-      // Navigation Tabs
-      document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-          tab.classList.add('active');
-          const target = tab.getAttribute('data-page-target');
-          document.getElementById(target)?.classList.add('active');
+    function attachEvents() {
+      document.querySelectorAll('[data-page-target]').forEach(button => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-page-target]').forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+          button.classList.add('active');
+          document.getElementById(button.dataset.pageTarget).classList.add('active');
         });
       });
 
-      // Theme Switcher
-      const themeBtn = document.getElementById('theme-toggle-btn');
-      const themeIcon = document.getElementById('theme-toggle-icon');
-      const themeLabel = document.getElementById('theme-toggle-label');
-
-      function setTheme(isLight) {
-        if (isLight) {
-          document.body.classList.add('light-theme');
-          themeIcon.className = 'fa-regular fa-moon';
-          themeLabel.textContent = 'Modo oscuro';
-          localStorage.setItem(THEME_KEY, 'light');
-        } else {
-          document.body.classList.remove('light-theme');
-          themeIcon.className = 'fa-regular fa-sun';
-          themeLabel.textContent = 'Modo claro';
-          localStorage.setItem(THEME_KEY, 'dark');
-        }
-      }
-
-      themeBtn.addEventListener('click', () => {
-        const isCurrentlyLight = document.body.classList.contains('light-theme');
-        setTheme(!isCurrentlyLight);
+      ['subject-name', 'career', 'profession-reference', 'nationality-context'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => { updateDetectedContext(); saveState(); });
+        document.getElementById(id).addEventListener('change', () => { updateDetectedContext(); saveState(); });
       });
 
-      if (localStorage.getItem(THEME_KEY) === 'light') {
-        setTheme(true);
-      }
-
-      // Batch Action Buttons
-      document.getElementById('generate-all-btn').addEventListener('click', async () => {
-        for (const card of HITO_CONFIGS) {
-          await buildPrompt(card.key);
-        }
-        showToast('Todos los prompts de Hitos generados');
-      });
-
-      document.getElementById('copy-all-btn').addEventListener('click', () => {
-        const allText = HITO_CONFIGS.map(c => document.getElementById(`${c.key}-output`)?.value).filter(Boolean).join('\n\n---\n\n');
-        if (allText) {
-          copyToClipboard(allText);
-          showToast('Todos los prompts copiados');
-        }
-      });
-
-      document.getElementById('generate-all-banners-btn').addEventListener('click', async () => {
-        for (const card of BANNER_CONFIGS) {
-          await buildBannerPrompt(card.key);
-        }
-        showToast('Todos los banners generados');
-      });
-
-      document.getElementById('copy-all-banners-btn').addEventListener('click', () => {
-        const allText = BANNER_CONFIGS.map(c => document.getElementById(`${c.key}-output`)?.value).filter(Boolean).join('\n\n---\n\n');
-        if (allText) {
-          copyToClipboard(allText);
-          showToast('Todos los banners copiados');
-        }
-      });
+      document.getElementById('generate-all-btn').addEventListener('click', () => generateAllPrompts(true));
+      const generateAllBtnTop = document.getElementById('generate-all-btn-top');
+      if (generateAllBtnTop) generateAllBtnTop.addEventListener('click', () => generateAllPrompts(true));
+      document.getElementById('copy-all-btn').addEventListener('click', copyAllPrompts);
+      const copyAllBtnTop = document.getElementById('copy-all-btn-top');
+      if (copyAllBtnTop) copyAllBtnTop.addEventListener('click', copyAllPrompts);
+      document.getElementById('autofill-btn').addEventListener('click', autofillSuggestions);
+      document.getElementById('reset-all-cards-btn')?.addEventListener('click', resetAllCards);
+      document.getElementById('reset-all-banner-cards-btn')?.addEventListener('click', resetAllBannerCards);
+      document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+      const resetAppBtnTop = document.getElementById('reset-app-btn-top');
+      if (resetAppBtnTop) resetAppBtnTop.addEventListener('click', resetApp);
 
       document.getElementById('select-all-render-rules').addEventListener('click', () => {
-        document.querySelectorAll('#render-rules-container input').forEach(cb => cb.checked = true);
+        document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => input.checked = true);
+        saveState();
       });
-
       document.getElementById('clear-render-rules').addEventListener('click', () => {
-        document.querySelectorAll('#render-rules-container input').forEach(cb => cb.checked = false);
+        document.querySelectorAll('#render-rules-container input[type="checkbox"]').forEach(input => input.checked = false);
+        saveState();
       });
 
-      // Load stored values
+      document.getElementById('prompt-cards').addEventListener('click', async event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const cardKey = button.dataset.card;
+        const action = button.dataset.action;
+        if (action === 'generate-one') {
+          await buildPrompt(cardKey);
+          toast(`Prompt de ${cardKey} generado completamente en inglés.`);
+        } else if (action === 'copy-one') {
+          copyOnePrompt(cardKey);
+        } else if (action === 'reset-one') {
+          resetCard(cardKey);
+        }
+      });
+
+      document.querySelectorAll('#prompt-cards select, #prompt-cards textarea').forEach(el => {
+        el.addEventListener('change', saveState);
+        el.addEventListener('input', saveState);
+      });
+
+      ['banner-subject-name', 'banner-career', 'banner-profession-reference', 'banner-nationality-context'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', saveState);
+        el.addEventListener('change', saveState);
+      });
+
+      document.getElementById('generate-all-banners-btn')?.addEventListener('click', generateAllBannerPrompts);
+      document.getElementById('copy-all-banners-btn')?.addEventListener('click', copyAllBannerPrompts);
+      document.getElementById('sync-banner-config-btn')?.addEventListener('click', syncBannerGeneralFromHitos);
+      document.getElementById('autofill-banners-btn')?.addEventListener('click', autofillBannerSuggestions);
+
+      const bannerArea = document.getElementById('page-2');
+      bannerArea?.addEventListener('click', async event => {
+        const button = event.target.closest('button[data-banner-action]');
+        if (!button) return;
+        const cardKey = button.dataset.bannerCard;
+        const action = button.dataset.bannerAction;
+        if (action === 'generate-one') {
+          await buildBannerPrompt(cardKey);
+          toast(`Prompt de ${cardKey} generado completamente en inglés.`);
+        } else if (action === 'copy-one') {
+          const value = document.getElementById(`${cardKey}-output`)?.value.trim();
+          if (!value) return toast('Ese prompt todavía está vacío.', 'warning');
+          await copyText(value);
+          toast(`Prompt de ${cardKey} copiado.`);
+        } else if (action === 'reset-one') {
+          resetBannerCard(cardKey);
+          toast(`Tarjeta ${cardKey} restablecida.`);
+        }
+      });
+
+      document.querySelectorAll('#page-2 select, #page-2 textarea').forEach(el => {
+        el.addEventListener('change', saveState);
+        el.addEventListener('input', saveState);
+      });
+    }
+    function loadTotalGenerator() { return; }
+
+    function applyTheme(theme) {
+      const finalTheme = theme === 'light' ? 'light' : 'dark';
+      document.body.classList.toggle('light-theme', finalTheme === 'light');
+      document.documentElement.classList.toggle('dark', finalTheme === 'dark');
+      const label = document.getElementById('theme-toggle-label');
+      const icon = document.getElementById('theme-toggle-icon');
+      if (label) label.textContent = finalTheme === 'light' ? 'Modo oscuro' : 'Modo claro';
+      if (icon) {
+        icon.className = finalTheme === 'light' ? 'fa-regular fa-moon' : 'fa-regular fa-sun';
+      }
+      localStorage.setItem(THEME_KEY, finalTheme);
+    }
+
+    function toggleTheme() {
+      const current = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+      applyTheme(current === 'light' ? 'dark' : 'light');
+    }
+
+    function initTheme() {
+      const storedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(storedTheme);
+    }
+
+    function init() {
+      initTheme();
+      buildProfessionSelect();
+      buildBannerProfessionSelect();
+      buildRenderRules();
+      buildPromptCards();
+      buildBannerCards();
       loadState();
-    });
+      attachEvents();
+      updateDetectedContext();
+      saveState();
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
